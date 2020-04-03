@@ -3525,7 +3525,7 @@ class Product extends CommonObject
      * @param  int $incdec  1=Increase/decrease stock of child when parent stock increase/decrease
      * @return int                < 0 if KO, > 0 if OK
      */
-    public function add_sousproduit($id_pere, $id_fils, $qty, $incdec = 1)
+    public function add_sousproduit($id_pere, $id_fils, $qty, $incdec = 1, $optional = 0)
     {
         // phpcs:enable
         // Clean parameters
@@ -3538,6 +3538,7 @@ class Product extends CommonObject
         if (!is_numeric($incdec)) {
             $incdec = 0;
         }
+	if (! is_numeric($optional)) $optional=0;
 
         $result = $this->del_sousproduit($id_pere, $id_fils);
         if ($result < 0) {
@@ -3562,8 +3563,8 @@ class Product extends CommonObject
                 }
                 else
                 {
-                    $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'product_association(fk_product_pere,fk_product_fils,qty,incdec)';
-                    $sql .= ' VALUES ('.$id_pere.', '.$id_fils.', '.$qty.', '.$incdec.')';
+                    $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'product_association(fk_product_pere,fk_product_fils,qty,incdec,optional)';
+                    $sql .= ' VALUES ('.$id_pere.', '.$id_fils.', '.$qty.', '.$incdec.', '.$optional.')';
                     if (!$this->db->query($sql)) {
                          dol_print_error($this->db);
                          return -1;
@@ -3587,7 +3588,7 @@ class Product extends CommonObject
      * @param  int $incdec  1=Increase/decrease stock of child when parent stock increase/decrease
      * @return int                < 0 if KO, > 0 if OK
      */
-    public function update_sousproduit($id_pere, $id_fils, $qty, $incdec = 1)
+    public function update_sousproduit($id_pere, $id_fils, $qty, $incdec = 1, $optional = 0)
     {
         // phpcs:enable
         // Clean parameters
@@ -3603,10 +3604,12 @@ class Product extends CommonObject
         if (!is_numeric($qty)) {
             $qty = 1;
         }
+	if (! is_numeric($optional)) $optional=0;
 
         $sql = 'UPDATE '.MAIN_DB_PREFIX.'product_association SET ';
         $sql .= 'qty='.$qty;
         $sql .= ',incdec='.$incdec;
+	$sql .= ',optional='.$optional;
         $sql .= ' WHERE fk_product_pere='.$id_pere.' AND fk_product_fils='.$id_fils;
 
         if (!$this->db->query($sql)) {

@@ -1096,3 +1096,4 @@ $reshook = $hookmanager->executeHooks('dashboardAccountancy', $parameters, $obje
 // End of page
 llxFooter();
 $db->close();
+
