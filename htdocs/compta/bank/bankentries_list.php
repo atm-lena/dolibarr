@@ -1416,7 +1416,7 @@ if ($resql)
 					if($links[$key]['type'] == 'payment_salary') $type_link = 'payment_salary';
 				}
 
-				$sqlu = "SELECT url_id FROM ".MAIN_DB_PREFIX."bank_url WHERE fk_bank=".$objp->rowid." AND type='user'";
+				$sqlu = "SELECT url_id FROM ".MAIN_DB_PREFIX."bank_url WHERE fk_bank=".$objp->rowid." AND (type='user' OR type='salary')";
 				$resqlu = $db->query($sqlu);
 
 				if($resqlu) {
@@ -1424,7 +1424,6 @@ if ($resql)
 					if($db->num_rows($resqlu) > 0 &&
 						(($type_link == 'payment_salary' && !empty($user->rights->salaries->read))
 							|| ($type_link == 'payment_sc' && !empty($user->rights->tax->charges->lire)))) {
-
 						$obj = $db->fetch_object($resqlu);
 						$userstatic->fetch($obj->url_id);
 						print $userstatic->getNomUrl(1);
