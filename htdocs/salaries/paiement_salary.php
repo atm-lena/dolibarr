@@ -37,7 +37,8 @@ $amounts = array();
 
 // Security check
 $socid = 0;
-if ($user->socid > 0) {
+if ($user->socid > 0)
+{
 	$socid = $user->socid;
 }
 
@@ -46,90 +47,107 @@ if ($user->socid > 0) {
  * Actions
  */
 
-if ($action == 'add_payment' || ($action == 'confirm_paiement' && $confirm == 'yes')) {
+if ($action == 'add_payment' || ($action == 'confirm_paiement' && $confirm == 'yes'))
+{
 	$error = 0;
 
-	if ($_POST["cancel"]) {
+	if ($_POST["cancel"])
+	{
 		$loc = DOL_URL_ROOT.'/salaries/card.php?id='.$chid;
 		header("Location: ".$loc);
 		exit;
 	}
 
-	$datepaye = dol_mktime(12, 0, 0, GETPOST("remonth", 'int'), GETPOST("reday", 'int'), GETPOST("reyear", 'int'));
+	$datepaye = dol_mktime(12, 0, 0, $_POST["remonth"], $_POST["reday"], $_POST["reyear"]);
 
-	if (!(GETPOST("paiementtype", 'int') > 0)) {
+	if (!$_POST["paiementtype"] > 0)
+	{
 		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("PaymentMode")), null, 'errors');
 		$error++;
-		$action = 'create';
+        $action = 'create';
 	}
-	if ($datepaye == '') {
+	if ($datepaye == '')
+	{
 		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("Date")), null, 'errors');
 		$error++;
-		$action = 'create';
+        $action = 'create';
 	}
-	if (!empty($conf->banque->enabled) && !(GETPOST("accountid", 'int') > 0)) {
-		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("AccountToCredit")), null, 'errors');
-		$error++;
-		$action = 'create';
-	}
+    if (!empty($conf->banque->enabled) && !($_POST["accountid"] > 0))
+    {
+        setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("AccountToCredit")), null, 'errors');
+        $error++;
+        $action = 'create';
+    }
 
-	if (!$error) {
+	if (!$error)
+	{
 		$paymentid = 0;
 
 		// Read possible payments
-		foreach ($_POST as $key => $value) {
-			if (substr($key, 0, 7) == 'amount_') {
+		foreach ($_POST as $key => $value)
+		{
+			if (substr($key, 0, 7) == 'amount_')
+			{
 				$other_chid = substr($key, 7);
 				$amounts[$other_chid] = price2num($_POST[$key]);
 			}
 		}
 
-		if (count($amounts) <= 0) {
-			$error++;
-			setEventMessages($langs->trans("ErrorNoPaymentDefined"), null, 'errors');
-			$action = 'create';
-		}
+        if (count($amounts) <= 0)
+        {
+            $error++;
+            setEventMessages($langs->trans("ErrorNoPaymentDefined"), null, 'errors');
+            $action = 'create';
+        }
 
-		if (!$error) {
-			$db->begin();
+        if (!$error)
+        {
+    		$db->begin();
 
-			// Create a line of payments
-			$paiement = new PaymentSalary($db);
-			$paiement->chid         = $chid;
-			$paiement->datepaye     = $datepaye;
-			$paiement->amounts      = $amounts; // Tableau de montant
-			$paiement->paiementtype = GETPOST("paiementtype", 'alphanohtml');
-			$paiement->num_payment  = GETPOST("num_payment", 'alphanohtml');
-			$paiement->note         = GETPOST("note", 'none');
-			$paiement->note_private = GETPOST("note", 'none');
+    		// Create a line of payments
+    		$paiement = new PaymentSalary($db);
+    		$paiement->chid         = $chid;
+    		$paiement->datepaye     = $datepaye;
+    		$paiement->amounts      = $amounts; // Tableau de montant
+    		$paiement->paiementtype = GETPOST("paiementtype", 'alphanohtml');
+    		$paiement->num_payment  = GETPOST("num_payment", 'alphanohtml');
+    		$paiement->note         = GETPOST("note", 'none');
+    		$paiement->note_private = GETPOST("note", 'none');
 
-			if (!$error) {
-				$paymentid = $paiement->create($user, (GETPOST('closepaidsalary') == 'on' ? 1 : 0));
-				if ($paymentid < 0) {
-					$error++;
-					setEventMessages($paiement->error, null, 'errors');
-					$action = 'create';
-				}
-			}
+    		if (!$error)
+    		{
+    		    $paymentid = $paiement->create($user, (GETPOST('closepaidsalary') == 'on' ? 1 : 0));
+                if ($paymentid < 0)
+                {
+                	$error++;
+                	setEventMessages($paiement->error, null, 'errors');
+                	$action = 'create';
+                }
+    		}
 
-			if (!$error) {
-				$result = $paiement->addPaymentToBank($user, 'payment_salary', '(SalaryPayment)', GETPOST('accountid', 'int'), '', '');
-				if (!($result > 0)) {
-					$error++;
-					setEventMessages($paiement->error, null, 'errors');
-					$action = 'create';
-				}
-			}
+            if (!$error)
+            {
+                $result = $paiement->addPaymentToBank($user, 'payment_salary', '(SalaryPayment)', GETPOST('accountid', 'int'), '', '');
+                if (!($result > 0))
+                {
+                	$error++;
+                	setEventMessages($paiement->error, null, 'errors');
+                	$action = 'create';
+                }
+            }
 
-			if (!$error) {
-				$db->commit();
-				$loc = DOL_URL_ROOT.'/salaries/card.php?id='.$chid;
-				header('Location: '.$loc);
-				exit;
-			} else {
-				$db->rollback();
-			}
-		}
+    	    if (!$error)
+            {
+                $db->commit();
+                $loc = DOL_URL_ROOT.'/salaries/card.php?id='.$chid;
+                header('Location: '.$loc);
+                exit;
+            }
+            else
+            {
+                $db->rollback();
+            }
+        }
 	}
 }
 
@@ -144,14 +162,16 @@ $form = new Form($db);
 
 
 // Formulaire de creation d'un paiement de charge
-if ($action == 'create') {
-	$salary = new Salary($db);		// Salary to pay
+if ($action == 'create')
+{
+	$salary = new Salary($db);
 	$salary->fetch($chid);
-	$salary->accountid = $salary->fk_account ? $salary->fk_account : $salary->accountid;
-	$salary->paiementtype = $salary->mode_reglement_id ? $salary->mode_reglement_id : $salary->paiementtype;
+    $salary->accountid = $salary->fk_account ? $salary->fk_account : $salary->accountid;
+    $salary->paiementtype = $salary->mode_reglement_id ? $salary->mode_reglement_id : $salary->paiementtype;
 
 	$total = $salary->amount;
-	if (!empty($conf->use_javascript_ajax)) {
+	if (!empty($conf->use_javascript_ajax))
+	{
 		print "\n".'<script type="text/javascript" language="javascript">';
 
 		//Add js for AutoFill
@@ -167,6 +187,11 @@ if ($action == 'create') {
 
 	print load_fiche_titre($langs->trans("DoPayment"));
 	print "<br>\n";
+
+	if ($mesg)
+	{
+		print "<div class=\"error\">$mesg</div>";
+	}
 
 	print '<form name="add_payment" action="'.$_SERVER['PHP_SELF'].'" method="post">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
@@ -189,7 +214,8 @@ if ($action == 'create') {
 	$sql .= " FROM ".MAIN_DB_PREFIX."payment_salary as p";
 	$sql .= " WHERE p.fk_salary = ".$chid;
 	$resql = $db->query($sql);
-	if ($resql) {
+	if ($resql)
+	{
 		$obj = $db->fetch_object($resql);
 		$sumpaid = $obj->total;
 		$db->free();
@@ -223,7 +249,7 @@ if ($action == 'create') {
 
 	print '<tr>';
 	print '<td class="tdtop">'.$langs->trans("Comments").'</td>';
-	print '<td class="tdtop"><textarea name="note" wrap="soft" cols="60" rows="'.ROWS_3.'"></textarea></td>';
+	print '<td class="tdtop"><textarea name="note" wrap="soft" cols="60" rows="'.ROWS_3.'">'.GETPOST('note', 'alphanohtml').'</textarea></td>';
 	print '</tr>';
 
 	print '</table>';
@@ -231,7 +257,7 @@ if ($action == 'create') {
 	dol_fiche_end();
 
 	/*
-	 * Autres charges impayees
+ 	 * Autres charges impayees
 	 */
 	$num = 1;
 	$i = 0;
@@ -249,15 +275,19 @@ if ($action == 'create') {
 	$total = 0;
 	$totalrecu = 0;
 
-	while ($i < $num) {
+	while ($i < $num)
+	{
 		$objp = $salary;
 
 		print '<tr class="oddeven">';
 
-		if ($objp->dateep > 0) {
+		if ($objp->dateep > 0)
+		{
 			print '<td class="left">'.dol_print_date($objp->dateep, 'day').'</td>'."\n";
-		} else {
-			print '<td align="center"><b>!!!</b></td>'."\n";
+		}
+		else
+		{
+			print "<td align=\"center\"><b>!!!</b></td>\n";
 		}
 
 		print '<td class="right">'.price($objp->amount)."</td>";
@@ -267,16 +297,18 @@ if ($action == 'create') {
 		print '<td class="right">'.price($objp->amount - $sumpaid)."</td>";
 
 		print '<td class="center">';
-		if ($sumpaid < $objp->amount) {
+		if ($sumpaid < $objp->amount)
+		{
 			$namef = "amount_".$objp->id;
 			$nameRemain = "remain_".$objp->id;
-			if (!empty($conf->use_javascript_ajax)) {
-				print img_picto("Auto fill", 'rightarrow', "class='AutoFillAmount' data-rowid='".$namef."' data-value='".($objp->amount - $sumpaid)."'");
-			}
+			if (!empty($conf->use_javascript_ajax))
+					print img_picto("Auto fill", 'rightarrow', "class='AutoFillAmount' data-rowid='".$namef."' data-value='".($objp->amount - $sumpaid)."'");
 			$remaintopay = $objp->amount - $sumpaid;
 			print '<input type=hidden class="sum_remain" name="'.$nameRemain.'" value="'.$remaintopay.'">';
-			print '<input type="text" size="8" name="'.$namef.'" id="'.$namef.'">';
-		} else {
+			print '<input type="text" size="8" name="'.$namef.'" id="'.$namef.' value="'.GETPOST('amount_'.$objp->id, 'intcomma').'">';
+		}
+		else
+		{
 			print '-';
 		}
 		print "</td>";
@@ -287,7 +319,8 @@ if ($action == 'create') {
 		$totalrecu += $objp->am;
 		$i++;
 	}
-	if ($i > 1) {
+	if ($i > 1)
+	{
 		// Print total
 		print '<tr class="oddeven">';
 		print '<td colspan="2" class="left">'.$langs->trans("Total").':</td>';
