@@ -744,7 +744,8 @@ class Holiday extends CommonObject
 		if (!$error) {
 			$this->oldref = $this->ref;
 
-			$res = $this->renameTemporaryRefDirectory($num);
+			$dirpath = $conf->holiday->multidir_output[$this->entity];
+			$res = $this->renameTemporaryRefDirectory($dirpath, 'holiday');
 			if($res < 0) $error++;
 		}
 
