@@ -2232,7 +2232,7 @@ if ($action == 'create') {
 	}
 	print '</tr></table>';
 	print '</td><td class="valuefield">';
-	if ($object->statut == Propal::STATUS_DRAFT && $action == 'editdemandreason' && $usercancreate) {
+	if ($action == 'editdemandreason' && $usercancreate) {
 		$form->formInputReason($_SERVER['PHP_SELF'].'?id='.$object->id, $object->demand_reason_id, 'demand_reason_id', 1);
 	} else {
 		$form->formInputReason($_SERVER['PHP_SELF'].'?id='.$object->id, $object->demand_reason_id, 'none');
