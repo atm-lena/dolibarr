@@ -325,8 +325,14 @@ print $tooltiponpriceend;
 	<td class="linecoluht_currency nowraponall right"><?php $coldisplay++; ?><?php print price($sign * $line->multicurrency_subprice); ?></td>
 <?php }
 
-if ($inputalsopricewithtax) { ?>
-	<td class="linecoluttc nowraponall right"><?php $coldisplay++; ?><?php print (isset($line->pu_ttc) ? price($sign * $line->pu_ttc) : price($sign * $line->subprice)); ?></td>
+if (!empty($inputalsopricewithtax) && !getDolGlobalInt('MAIN_NO_INPUT_PRICE_WITH_TAX')) { ?>
+	<td class="linecoluttc nowraponall right"><?php $coldisplay++; ?><?php
+	$upinctax = isset($line->pu_ttc) ? $line->pu_ttc : null;
+	if (getDolGlobalInt('MAIN_UNIT_PRICE_WITH_TAX_IS_FOR_ALL_TAXES')) {
+		$upinctax = price2num($line->total_ttc / $line->qty, 'MU');
+	}
+	print (isset($upinctax) ? price($sign * $upinctax) : price($sign * $line->subprice));
+	?></td>
 <?php } ?>
 
 	<td class="linecolqty nowraponall right"><?php $coldisplay++; ?>
@@ -408,7 +414,7 @@ if ($outputalsopricetotalwithtax) {
 
 if ($this->statut == 0 && !empty($object_rights->creer) && $action != 'selectlines') {
 	$situationinvoicelinewithparent = 0;
-	if ($line->fk_prev_id != null && in_array($object->element, array('facture', 'facturedet'))) {
+	if (isset($line->fk_prev_id) && in_array($object->element, array('facture', 'facturedet'))) {
 		if ($object->type == $object::TYPE_SITUATION) {	// The constant TYPE_SITUATION exists only for object invoice
 			// Set constant to disallow editing during a situation cycle
 			$situationinvoicelinewithparent = 1;
