@@ -2429,6 +2429,13 @@ if ($action == 'create') {
 
 			// Validate
 			if ($object->statut == 0 && $num > 0) {
+				if(!empty($object->lines)) {
+					foreach ($object->lines as $line) {
+						if (empty($line->product_ref)) {
+							$usercanvalidate = 0;
+						}
+					}
+				}
 				if ($usercanvalidate) {
 					$tmpbuttonlabel = $langs->trans('Validate');
 					if ($usercanapprove && empty($conf->global->SUPPLIER_ORDER_NO_DIRECT_APPROVE)) {
