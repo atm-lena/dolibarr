@@ -2430,11 +2430,13 @@ if ($action == 'create') {
 			// Validate
 			if ($object->statut == 0 && $num > 0) {
 				if(!empty($object->lines)) {
+					/*** SPECIFIQUE METIFFIOT : Lorsqu'une commande contient une ligne "libre", empêcher l'utilisateur de la valider***/
 					foreach ($object->lines as $line) {
 						if (empty($line->product_ref)) {
 							$usercanvalidate = 0;
 						}
 					}
+					/*** SPECIFIQUE METIFFIOT ***/
 				}
 				if ($usercanvalidate) {
 					$tmpbuttonlabel = $langs->trans('Validate');
