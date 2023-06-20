@@ -492,6 +492,9 @@ class Documents extends DolibarrApi
 			throw new RestException(500, 'Modulepart '.$modulepart.' not implemented yet.');
 		}
 
+		$objectType = $modulepart;
+		if (! empty($object->id) && ! empty($object->table_element)) $objectType = $object->table_element;
+
 		$filearray = dol_dir_list($upload_dir, $type, $recursive, '', '(\.meta|_preview.*\.png)$', $sortfield, (strtolower($sortorder) == 'desc' ?SORT_DESC:SORT_ASC), 1);
 		if (empty($filearray)) {
 			throw new RestException(404, 'Search for modulepart '.$modulepart.' with Id '.$object->id.(!empty($object->ref) ? ' or Ref '.$object->ref : '').' does not return any document.');
@@ -499,11 +502,14 @@ class Documents extends DolibarrApi
 			if (($object->id) > 0 && !empty($modulepart)) {
 				require_once DOL_DOCUMENT_ROOT.'/ecm/class/ecmfiles.class.php';
 				$ecmfile = new EcmFiles($this->db);
-				$result = $ecmfile->fetchAll('', '', 0, 0, array('t.src_object_type' => $modulepart, 't.src_object_id' => $object->id));
+				$result = $ecmfile->fetchAll('', '', 0, 0, array('t.src_object_type' => $objectType, 't.src_object_id' => $object->id));
 				if ($result < 0) {
 					throw new RestException(503, 'Error when retrieve ecm list : '.$this->db->lasterror());
 				} elseif (is_array($ecmfile->lines) && count($ecmfile->lines) > 0) {
-					$filearray['ecmfiles_infos'] = $ecmfile->lines;
+					$count = count($filearray);
+					for ($i = 0 ; $i < $count ; $i++) {
+						if ($filearray[$i]['name'] == $ecmfile->lines[$i]->filename) $filearray[$i] = array_merge($filearray[$i], (array) $ecmfile->lines[0]);
+					}
 				}
 			}
 		}
@@ -597,6 +603,16 @@ class Documents extends DolibarrApi
 
 				require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.facture.class.php';
 				$object = new FactureFournisseur($this->db);
+			} elseif ($modulepart == 'commande' || $modulepart == 'order') {
+					$modulepart = 'commande';
+
+					require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
+					$object = new Commande($this->db);
+			} elseif ($modulepart == 'commande_fournisseur' || $modulepart == 'supplier_order') {
+					$modulepart = 'supplier_order';
+
+					require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
+					$object = new CommandeFournisseur($this->db);
 			} elseif ($modulepart == 'project') {
 				require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 				$object = new Project($this->db);
@@ -655,7 +671,7 @@ class Documents extends DolibarrApi
 			}
 
 			// Special cases that need to use get_exdir to get real dir of object
-			// If future, all object should use this to define path of documents.
+			// In future, all object should use this to define path of documents.
 			if ($modulepart == 'supplier_invoice') {
 				$tmpreldir = get_exdir($object->id, 2, 0, 0, $object, 'invoice_supplier');
 			}

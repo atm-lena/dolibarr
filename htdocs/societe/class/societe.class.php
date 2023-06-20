@@ -193,8 +193,8 @@ class Societe extends CommonObject
 		'tva_intra' =>array('type'=>'varchar(20)', 'label'=>'Tva intra', 'enabled'=>1, 'visible'=>-1, 'position'=>210),
 		'capital' =>array('type'=>'double(24,8)', 'label'=>'Capital', 'enabled'=>1, 'visible'=>-1, 'position'=>215),
 		'fk_stcomm' =>array('type'=>'integer', 'label'=>'CommercialStatus', 'enabled'=>1, 'visible'=>-1, 'notnull'=>1, 'position'=>220),
-		'note_private' =>array('type'=>'text', 'label'=>'NotePublic', 'enabled'=>1, 'visible'=>0, 'position'=>225),
-		'note_public' =>array('type'=>'text', 'label'=>'NotePrivate', 'enabled'=>1, 'visible'=>0, 'position'=>230),
+		'note_public' =>array('type'=>'text', 'label'=>'NotePublic', 'enabled'=>1, 'visible'=>0, 'position'=>225),
+		'note_private' =>array('type'=>'text', 'label'=>'NotePrivate', 'enabled'=>1, 'visible'=>0, 'position'=>230),
 		'prefix_comm' =>array('type'=>'varchar(5)', 'label'=>'Prefix comm', 'enabled'=>'$conf->global->SOCIETE_USEPREFIX', 'visible'=>-1, 'position'=>235),
 		'client' =>array('type'=>'tinyint(4)', 'label'=>'Client', 'enabled'=>1, 'visible'=>-1, 'position'=>240),
 		'fournisseur' =>array('type'=>'tinyint(4)', 'label'=>'Fournisseur', 'enabled'=>1, 'visible'=>-1, 'position'=>245),
@@ -915,8 +915,8 @@ class Societe extends CommonObject
 				$sql .= ", accountancy_code_sell";
 			}
 			$sql .= ") VALUES ('".$this->db->escape($this->name)."', '".$this->db->escape($this->name_alias)."', ".((int) $this->entity).", '".$this->db->idate($now)."'";
-			$sql .= ", ".(!empty($this->typent_id) ? ((int) $this->typent_id) : "null");
 			$sql .= ", ".(!empty($user->id) ? ((int) $user->id) : "null");
+			$sql .= ", ".(!empty($this->typent_id) ? ((int) $this->typent_id) : "null");
 			$sql .= ", ".(!empty($this->canvas) ? "'".$this->db->escape($this->canvas)."'" : "null");
 			$sql .= ", ".((int) $this->status);
 			$sql .= ", ".(!empty($this->ref_ext) ? "'".$this->db->escape($this->ref_ext)."'" : "null");
@@ -1078,7 +1078,7 @@ class Societe extends CommonObject
 			}
 		}
 
-		if (!empty($error)) {
+		if (empty($error)) {
 			dol_syslog(get_class($this)."::create_individual success");
 			$this->db->commit();
 		} else {
@@ -1450,11 +1450,13 @@ class Societe extends CommonObject
 
 			$sql .= ",prefix_comm = ".(!empty($this->prefix_comm) ? "'".$this->db->escape($this->prefix_comm)."'" : "null");
 
-			$sql .= ",fk_effectif = ".(!empty($this->effectif_id) ? "'".$this->db->escape($this->effectif_id)."'" : "null");
+			$sql .= ",fk_effectif = ".($this->effectif_id > 0 ? ((int) $this->effectif_id) : "null");
 			if (isset($this->stcomm_id)) {
-				$sql .= ",fk_stcomm=".(!empty($this->stcomm_id) ? $this->stcomm_id : "0");
+				$sql .= ",fk_stcomm=".($this->stcomm_id >= -1 ? ((int) $this->stcomm_id) : "0");
 			}
-			$sql .= ",fk_typent = ".(!empty($this->typent_id) ? "'".$this->db->escape($this->typent_id)."'" : "0");
+			if (isset($this->typent_id)) {
+				$sql .= ",fk_typent = ".($this->typent_id > 0 ? ((int) $this->typent_id) : "0");
+			}
 
 			$sql .= ",fk_forme_juridique = ".(!empty($this->forme_juridique_code) ? "'".$this->db->escape($this->forme_juridique_code)."'" : "null");
 

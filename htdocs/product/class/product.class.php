@@ -1408,6 +1408,14 @@ class Product extends CommonObject
 				}
 			}
 
+			// Delete record into ECM index and physically
+			if (!$error) {
+				$res = $this->deleteEcmFiles(0); // Deleting files physically is done later with the dol_delete_dir_recursive
+				if (!$res) {
+					$error++;
+				}
+			}
+
 			if (!$error) {
 				// We remove directory
 				$ref = dol_sanitizeFileName($this->ref);
@@ -1690,7 +1698,11 @@ class Product extends CommonObject
 		$testExit = array('multiprices','multiprices_ttc','multiprices_base_type','multiprices_min','multiprices_min_ttc','multiprices_tva_tx','multiprices_recuperableonly');
 
 		foreach ($testExit as $field) {
-			if (!isset($this->$field[$level])) {
+			if (!isset($this->$field)) {
+				return array();
+			}
+			$tmparray = $this->$field;
+			if (!isset($tmparray[$level])) {
 				return array();
 			}
 		}
@@ -2040,7 +2052,7 @@ class Product extends CommonObject
 
 
 	/**
-	 * Modify customer price of a product/Service
+	 * Modify customer price of a product/Service for a given level
 	 *
 	 * @param  double $newprice          New price
 	 * @param  string $newpricebase      HT or TTC
@@ -2977,10 +2989,10 @@ class Product extends CommonObject
 			// If stock decrease is on invoice validation, the theorical stock continue to
 			// count the orders to ship in theorical stock when some are already removed b invoice validation.
 			// If option DECREASE_ONLY_UNINVOICEDPRODUCTS is on, we make a compensation.
-			if (!empty($conf->global->STOCK_CALCULATE_ON_BILL)) {
+			if (!empty($conf->global->STOCK_CALCULATE_ON_BILL) && $forVirtualStock) {
 				if (!empty($conf->global->DECREASE_ONLY_UNINVOICEDPRODUCTS)) {
 					$adeduire = 0;
-					$sql = "SELECT sum(fd.qty) as count FROM ".MAIN_DB_PREFIX."facturedet fd ";
+					$sql = "SELECT sum(".$this->db->ifsql('f.type=2', -1, 1)." * fd.qty) as count FROM ".MAIN_DB_PREFIX."facturedet fd ";
 					$sql .= " JOIN ".MAIN_DB_PREFIX."facture f ON fd.fk_facture = f.rowid ";
 					$sql .= " JOIN ".MAIN_DB_PREFIX."element_element el ON el.fk_target = f.rowid and el.targettype = 'facture' and sourcetype = 'commande'";
 					$sql .= " JOIN ".MAIN_DB_PREFIX."commande c ON el.fk_source = c.rowid ";
@@ -2993,6 +3005,9 @@ class Product extends CommonObject
 							$obj = $this->db->fetch_object($resql);
 							$adeduire += $obj->count;
 						}
+					} else {
+						$this->error = $this->db->error();
+						return -1;
 					}
 
 					$this->stats_commande['qty'] -= $adeduire;
@@ -4693,9 +4708,10 @@ class Product extends CommonObject
 	 * @param  int $id             		Id of product to search childs of
 	 * @param  int $firstlevelonly 		Return only direct child
 	 * @param  int $level          		Level of recursing call (start to 1)
+	 * @param  array $parents   	    Array of all parents of $id
 	 * @return array                    Return array(prodid=>array(0=prodid, 1=>qty, 2=>product type, 3=>label, 4=>incdec, 5=>product ref)
 	 */
-	public function getChildsArbo($id, $firstlevelonly = 0, $level = 1)
+	public function getChildsArbo($id, $firstlevelonly = 0, $level = 1, $parents = array())
 	{
 		global $alreadyfound;
 
@@ -4713,7 +4729,7 @@ class Product extends CommonObject
 		$sql .= " AND pa.fk_product_fils <> ".((int) $id); // This should not happens, it is to avoid infinite loop if it happens
 		$sql.= " ORDER BY pa.rang";
 
-		dol_syslog(get_class($this).'::getChildsArbo id='.$id.' level='.$level, LOG_DEBUG);
+		dol_syslog(get_class($this).'::getChildsArbo id='.$id.' level='.$level. ' parents='.$parents, LOG_DEBUG);
 
 		if ($level == 1) {
 			$alreadyfound = array($id=>1); // We init array of found object to start of tree, so if we found it later (should not happened), we stop immediatly
@@ -4729,7 +4745,9 @@ class Product extends CommonObject
 			while ($rec = $this->db->fetch_array($res)) {
 				if (!empty($alreadyfound[$rec['rowid']])) {
 					dol_syslog(get_class($this).'::getChildsArbo the product id='.$rec['rowid'].' was already found at a higher level in tree. We discard to avoid infinite loop', LOG_WARNING);
-					continue;
+					if (in_array($rec['id'], $parents)) {
+						continue; // We discard this child if it is already found at a higher level in tree in the same branch.
+					}
 				}
 				$alreadyfound[$rec['rowid']] = 1;
 				$prods[$rec['rowid']] = array(
@@ -4745,7 +4763,7 @@ class Product extends CommonObject
 				//$prods[$this->db->escape($rec['label'])]= array(0=>$rec['id'],1=>$rec['qty'],2=>$rec['fk_product_type']);
 				//$prods[$this->db->escape($rec['label'])]= array(0=>$rec['id'],1=>$rec['qty']);
 				if (empty($firstlevelonly)) {
-					$listofchilds = $this->getChildsArbo($rec['rowid'], 0, $level + 1);
+					$listofchilds = $this->getChildsArbo($rec['rowid'], 0, $level + 1, array_push($parents, $rec['rowid']));
 					foreach ($listofchilds as $keyChild => $valueChild) {
 						$prods[$rec['rowid']]['childs'][$keyChild] = $valueChild;
 					}

@@ -15,7 +15,7 @@
  * Copyright (C) 2013       Cedric Gross            <c.gross@kreiz-it.fr>
  * Copyright (C) 2013       Florian Henry           <florian.henry@open-concept.pro>
  * Copyright (C) 2016-2022  Ferran Marcet           <fmarcet@2byte.es>
- * Copyright (C) 2018       Alexandre Spangaro		<aspangaro@open-dsi.fr>
+ * Copyright (C) 2018-2022  Alexandre Spangaro		<aspangaro@open-dsi.fr>
  * Copyright (C) 2018       Nicolas ZABOURI         <info@inovea-conseil.com>
  * Copyright (C) 2022       Sylvain Legrand         <contact@infras.fr>
  *
@@ -129,21 +129,32 @@ class Facture extends CommonInvoice
 	/**
 	 * @var int	Date expected for delivery
 	 * @deprecated
+	 * @see delivery_date
 	 */
-	public $date_livraison; // deprecated; Use delivery_date instead.
+	public $date_livraison;
 
+	/**
+	 * @var int	Date expected for delivery
+	 */
 	public $delivery_date; // Date expected of shipment (date starting shipment, not the reception that occurs some days after)
 
 	/**
 	 * @var string customer ref
+	 * @deprecated
+	 * @see ref_customer
 	 */
 	public $ref_client;
+
+	/**
+	 * @var string customer ref
+	 */
+	public $ref_customer;
 
 	/**
 	 * @var int Ref Int
 	 * @deprecated
 	 */
-	public $ref_int; // deprecated
+	public $ref_int;
 
 	//Check constants for types
 	public $type = self::TYPE_STANDARD;
@@ -160,7 +171,7 @@ class Facture extends CommonInvoice
 	public $revenuestamp;
 
 	/**
-	 * ! Closing after partial payment: discount_vat, badsupplier, abandon
+	 * ! Closing after partial payment: discount_vat, badcustomer or badsupplier, bankcharge, other
 	 * ! Closing when no payment: replaced, abandoned
 	 * @var string Close code
 	 */
@@ -328,8 +339,8 @@ class Facture extends CommonInvoice
 		'fk_currency' =>array('type'=>'varchar(3)', 'label'=>'CurrencyCode', 'enabled'=>1, 'visible'=>-1, 'position'=>185),
 		'fk_cond_reglement' =>array('type'=>'integer', 'label'=>'PaymentTerm', 'enabled'=>1, 'visible'=>-1, 'notnull'=>1, 'position'=>190),
 		'fk_mode_reglement' =>array('type'=>'integer', 'label'=>'PaymentMode', 'enabled'=>1, 'visible'=>-1, 'position'=>195),
-		'note_private' =>array('type'=>'text', 'label'=>'NotePublic', 'enabled'=>1, 'visible'=>0, 'position'=>205),
-		'note_public' =>array('type'=>'text', 'label'=>'NotePrivate', 'enabled'=>1, 'visible'=>0, 'position'=>210),
+		'note_private' =>array('type'=>'text', 'label'=>'NotePrivate', 'enabled'=>1, 'visible'=>0, 'position'=>205),
+		'note_public' =>array('type'=>'text', 'label'=>'NotePublic', 'enabled'=>1, 'visible'=>0, 'position'=>210),
 		'model_pdf' =>array('type'=>'varchar(255)', 'label'=>'Model pdf', 'enabled'=>1, 'visible'=>0, 'position'=>215),
 		'extraparams' =>array('type'=>'varchar(255)', 'label'=>'Extraparams', 'enabled'=>1, 'visible'=>-1, 'position'=>225),
 		'situation_cycle_ref' =>array('type'=>'smallint(6)', 'label'=>'Situation cycle ref', 'enabled'=>'$conf->global->INVOICE_USE_SITUATION', 'visible'=>-1, 'position'=>230),
@@ -417,7 +428,10 @@ class Facture extends CommonInvoice
 	const STATUS_ABANDONED = 3;
 
 	const CLOSECODE_DISCOUNTVAT = 'discount_vat'; // Abandonned remain - escompte
-	const CLOSECODE_BADDEBT = 'badcustomer'; // Abandonned - bad
+	const CLOSECODE_BADDEBT = 'badcustomer'; // Abandonned remain - bad customer
+	const CLOSECODE_BANKCHARGE = 'bankcharge'; // Abandonned remain - bank charge
+	const CLOSECODE_OTHER = 'other'; // Abandonned remain - other
+
 	const CLOSECODE_ABANDONED = 'abandon'; // Abandonned - other
 	const CLOSECODE_REPLACED = 'replaced'; // Closed after doing a replacement invoice
 
@@ -807,6 +821,10 @@ class Facture extends CommonInvoice
 							$fk_parent_line = 0;
 						}
 
+						// Complete vat rate with code
+						$vatrate = $newinvoiceline->tva_tx;
+						if ($newinvoiceline->vat_src_code && ! preg_match('/\(.*\)/', $vatrate)) $vatrate.=' ('.$newinvoiceline->vat_src_code.')';
+
 						$newinvoiceline->fk_parent_line = $fk_parent_line;
 
 						if ($this->type === Facture::TYPE_REPLACEMENT && $newinvoiceline->fk_remise_except) {
@@ -817,7 +835,37 @@ class Facture extends CommonInvoice
 							$newinvoiceline->fk_remise_except = $discountId;
 						}
 
-						$result = $newinvoiceline->insert();
+						$result = $this->addline(
+							$newinvoiceline->desc,
+							$newinvoiceline->subprice,
+							$newinvoiceline->qty,
+							$vatrate,
+							$newinvoiceline->localtax1_tx,
+							$newinvoiceline->localtax2_tx,
+							$newinvoiceline->fk_product,
+							$newinvoiceline->remise_percent,
+							$newinvoiceline->date_start,
+							$newinvoiceline->date_end,
+							$newinvoiceline->fk_code_ventilation,
+							$newinvoiceline->info_bits,
+							$newinvoiceline->fk_remise_except,
+							'HT',
+							0,
+							$newinvoiceline->product_type,
+							$newinvoiceline->rang,
+							$newinvoiceline->special_code,
+							$newinvoiceline->element,
+							$newinvoiceline->id,
+							$fk_parent_line,
+							$newinvoiceline->fk_fournprice,
+							$newinvoiceline->pa_ht,
+							$newinvoiceline->label,
+							$newinvoiceline->array_options,
+							$newinvoiceline->situation_percent,
+							$newinvoiceline->fk_prev_id,
+							$newinvoiceline->fk_unit,
+							$newinvoiceline->multicurrency_subprice
+						);
 
 						// Defined the new fk_parent_line
 						if ($result > 0 && $newinvoiceline->product_type == 9) {
@@ -1271,6 +1319,8 @@ class Facture extends CommonInvoice
 				$action = '';
 				$reshook = $hookmanager->executeHooks('createFrom', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
 				if ($reshook < 0) {
+					$this->errors += $hookmanager->errors;
+					$this->error = $hookmanager->error;
 					$error++;
 				}
 			}
@@ -1404,6 +1454,8 @@ class Facture extends CommonInvoice
 			$action = '';
 			$reshook = $hookmanager->executeHooks('createFrom', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
 			if ($reshook < 0) {
+				$this->errors += $hookmanager->errors;
+				$this->error = $hookmanager->error;
 				$error++;
 			}
 
@@ -1647,8 +1699,9 @@ class Facture extends CommonInvoice
 				$this->id = $obj->rowid;
 				$this->entity = $obj->entity;
 
-				$this->ref = $obj->ref;
-				$this->ref_client = $obj->ref_client;
+				$this->ref					= $obj->ref;
+				$this->ref_client			= $obj->ref_client;
+				$this->ref_customer			= $obj->ref_client;
 				$this->ref_ext				= $obj->ref_ext;
 				$this->type					= $obj->type;
 				$this->date					= $this->db->jdate($obj->df);
@@ -2630,7 +2683,7 @@ class Facture extends CommonInvoice
 	 */
 	public function validate($user, $force_number = '', $idwarehouse = 0, $notrigger = 0, $batch_rule = 0)
 	{
-		global $conf, $langs;
+		global $conf, $langs, $mysoc;
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 		$productStatic = null;
@@ -2667,6 +2720,44 @@ class Facture extends CommonInvoice
 			$this->error = 'Permission denied';
 			dol_syslog(get_class($this)."::validate ".$this->error.' MAIN_USE_ADVANCED_PERMS='.$conf->global->MAIN_USE_ADVANCED_PERMS, LOG_ERR);
 			return -1;
+		}
+
+		// Check for mandatory fields in thirdparty (defined into setup)
+		if (!empty($this->thirdparty) && is_object($this->thirdparty)) {
+			$array_to_check = array('IDPROF1', 'IDPROF2', 'IDPROF3', 'IDPROF4', 'IDPROF5', 'IDPROF6', 'EMAIL');
+			foreach ($array_to_check as $key) {
+				$keymin = strtolower($key);
+				if (!property_exists($this->thirdparty, $keymin)) {
+					continue;
+				}
+				$vallabel = $this->thirdparty->$keymin;
+
+				$i = (int) preg_replace('/[^0-9]/', '', $key);
+				if ($i > 0) {
+					if ($this->thirdparty->isACompany()) {
+						// Check for mandatory prof id (but only if country is other than ours)
+						if ($mysoc->country_id > 0 && $this->thirdparty->country_id == $mysoc->country_id) {
+							$idprof_mandatory = 'SOCIETE_'.$key.'_INVOICE_MANDATORY';
+							if (!$vallabel && !empty($conf->global->$idprof_mandatory)) {
+								$langs->load("errors");
+								$this->error = $langs->trans('ErrorProdIdIsMandatory', $langs->transcountry('ProfId'.$i, $this->thirdparty->country_code)).' ('.$langs->trans("ForbiddenBySetupRules").') ['.$langs->trans('Company').' : '.$this->thirdparty->name.']';
+								dol_syslog(__METHOD__.' '.$this->error, LOG_ERR);
+								return -1;
+							}
+						}
+					}
+				} else {
+					if ($key == 'EMAIL') {
+						// Check for mandatory
+						if (!empty($conf->global->SOCIETE_EMAIL_INVOICE_MANDATORY) && !isValidEMail($this->thirdparty->email)) {
+							$langs->load("errors");
+							$this->error = $langs->trans("ErrorBadEMail", $this->thirdparty->email).' ('.$langs->trans("ForbiddenBySetupRules").') ['.$langs->trans('Company').' : '.$this->thirdparty->name.']';
+							dol_syslog(__METHOD__.' '.$this->error, LOG_ERR);
+							return -1;
+						}
+					}
+				}
+			}
 		}
 
 		$this->db->begin();
@@ -3101,6 +3192,7 @@ class Facture extends CommonInvoice
 
 	/**
 	 *  Add an invoice line into database (linked to product/service or not).
+	 *  Note: ->thirdparty must be defined.
 	 *  Les parametres sont deja cense etre juste et avec valeurs finales a l'appel
 	 *  de cette methode. Aussi, pour le taux tva, il doit deja avoir ete defini
 	 *  par l'appelant par la methode get_default_tva(societe_vendeuse,societe_acheteuse,produit)
@@ -3178,7 +3270,7 @@ class Facture extends CommonInvoice
 
 		global $mysoc, $conf, $langs;
 
-		dol_syslog(get_class($this)."::addline id=$this->id,desc=$desc,pu_ht=$pu_ht,qty=$qty,txtva=$txtva, txlocaltax1=$txlocaltax1, txlocaltax2=$txlocaltax2, fk_product=$fk_product,remise_percent=$remise_percent,date_start=$date_start,date_end=$date_end,ventil=$ventil,info_bits=$info_bits,fk_remise_except=$fk_remise_except,price_base_type=$price_base_type,pu_ttc=$pu_ttc,type=$type, fk_unit=$fk_unit", LOG_DEBUG);
+		dol_syslog(get_class($this)."::addline id=$this->id, pu_ht=$pu_ht, qty=$qty, txtva=$txtva, txlocaltax1=$txlocaltax1, txlocaltax2=$txlocaltax2, fk_product=$fk_product, remise_percent=$remise_percent, date_start=$date_start, date_end=$date_end, ventil=$ventil, info_bits=$info_bits, fk_remise_except=$fk_remise_except, price_base_type=$price_base_type, pu_ttc=$pu_ttc, type=$type, fk_unit=$fk_unit, desc=".dol_trunc($desc, 25), LOG_DEBUG);
 
 		if ($this->statut == self::STATUS_DRAFT) {
 			include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
@@ -4828,7 +4920,7 @@ class Facture extends CommonInvoice
 
 	/**
 	 * @param	int			$rounding		Minimum number of decimal to show. If 0, no change, if -1, we use min($conf->global->MAIN_MAX_DECIMALS_UNIT,$conf->global->MAIN_MAX_DECIMALS_TOT)
-	 * @return number or -1 if not available
+	 * @return float or -1 if not available
 	 */
 	public function getRetainedWarrantyAmount($rounding = -1)
 	{
@@ -5003,6 +5095,7 @@ class Facture extends CommonInvoice
 			$sql .= ", ".MAIN_DB_PREFIX."c_paiement as cp";
 		}
 		$sql .= " WHERE f.paye = 0";
+		$sql .= " AND f.fk_statut = ".self::STATUS_VALIDATED;
 		$sql .= " AND f.date_lim_reglement = '".$this->db->idate($tmpidate, 'gmt')."'";
 		$sql .= " AND f.entity IN (".getEntity('facture').")";
 		if (!empty($paymentmode) && $paymentmode != 'all') {
@@ -5067,11 +5160,11 @@ class Facture extends CommonInvoice
 							if (!empty($recipient->email)) {
 								$to = $recipient->email;
 							} else {
-								$errormesg = "Failed to send remind to thirdparty id=".$tmpinvoice->fk_soc.". No email defined for user.";
+								$errormesg = "Failed to send remind to thirdparty id=".$tmpinvoice->socid.". No email defined for user.";
 								$error++;
 							}
 						} else {
-							$errormesg = "Failed to load recipient with thirdparty id=".$tmpinvoice->fk_soc;
+							$errormesg = "Failed to load recipient with thirdparty id=".$tmpinvoice->socid;
 							$error++;
 						}
 

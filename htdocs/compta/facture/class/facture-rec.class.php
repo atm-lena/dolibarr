@@ -184,8 +184,8 @@ class FactureRec extends CommonInvoice
 		'fk_cond_reglement' =>array('type'=>'integer', 'label'=>'Fk cond reglement', 'enabled'=>1, 'visible'=>-1, 'position'=>90),
 		'fk_mode_reglement' =>array('type'=>'integer', 'label'=>'Fk mode reglement', 'enabled'=>1, 'visible'=>-1, 'position'=>95),
 		'date_lim_reglement' =>array('type'=>'date', 'label'=>'Date lim reglement', 'enabled'=>1, 'visible'=>-1, 'position'=>100),
-		'note_private' =>array('type'=>'text', 'label'=>'NotePublic', 'enabled'=>1, 'visible'=>0, 'position'=>105),
-		'note_public' =>array('type'=>'text', 'label'=>'NotePrivate', 'enabled'=>1, 'visible'=>0, 'position'=>110),
+		'note_private' =>array('type'=>'text', 'label'=>'NotePrivate', 'enabled'=>1, 'visible'=>0, 'position'=>105),
+		'note_public' =>array('type'=>'text', 'label'=>'NotePublic', 'enabled'=>1, 'visible'=>0, 'position'=>110),
 		'modelpdf' =>array('type'=>'varchar(255)', 'label'=>'Modelpdf', 'enabled'=>1, 'visible'=>-1, 'position'=>115),
 		'date_last_gen' =>array('type'=>'varchar(7)', 'label'=>'Last gen', 'enabled'=>1, 'visible'=>-1, 'position'=>120),
 		'unit_frequency' =>array('type'=>'varchar(2)', 'label'=>'Unit frequency', 'enabled'=>1, 'visible'=>-1, 'position'=>125),
@@ -1310,6 +1310,11 @@ class FactureRec extends CommonInvoice
 					$facture->status = self::STATUS_DRAFT;
 					$facture->date = (empty($facturerec->date_when) ? $now : $facturerec->date_when); // We could also use dol_now here but we prefer date_when so invoice has real date when we would like even if we generate later.
 					$facture->socid = $facturerec->socid;
+					if (!empty($facturerec->fk_multicurrency)) {
+						$facture->fk_multicurrency = $facturerec->fk_multicurrency;
+						$facture->multicurrency_code = $facturerec->multicurrency_code;
+						$facture->multicurrency_tx = $facturerec->multicurrency_tx;
+					}
 
 					$invoiceidgenerated = $facture->create($user);
 					if ($invoiceidgenerated <= 0) {

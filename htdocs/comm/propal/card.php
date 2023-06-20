@@ -5,7 +5,7 @@
  * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
  * Copyright (C) 2005-2012 Regis Houssin         <regis.houssin@inodbox.com>
  * Copyright (C) 2006      Andre Cianfarani      <acianfa@free.fr>
- * Copyright (C) 2010-2016 Juanjo Menent         <jmenent@2byte.es>
+ * Copyright (C) 2010-2023 Juanjo Menent         <jmenent@2byte.es>
  * Copyright (C) 2010-2021 Philippe Grand        <philippe.grand@atoo-net.com>
  * Copyright (C) 2012-2013 Christophe Battarel   <christophe.battarel@altairis.fr>
  * Copyright (C) 2012      Cedric Salvador       <csalvador@gpcsolutions.fr>
@@ -131,7 +131,6 @@ $permissiontoedit = $usercancreate; // Used by the include of actions_lineupdown
 // Security check
 if (!empty($user->socid)) {
 	$socid = $user->socid;
-	$object->id = $user->socid;
 }
 restrictedArea($user, 'propal', $object->id);
 
@@ -316,6 +315,24 @@ if (empty($reshook)) {
 			$result = $object->set_date($user, $datep);
 			if ($result < 0) {
 				dol_print_error($db, $object->error);
+			} else {
+				if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+					$outputlangs = $langs;
+					$newlang = '';
+					if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id', 'aZ09')) $newlang = GETPOST('lang_id', 'aZ09');
+					if ($conf->global->MAIN_MULTILANGS && empty($newlang))	$newlang = $object->thirdparty->default_lang;
+					if (!empty($newlang)) {
+						$outputlangs = new Translate("", $conf);
+						$outputlangs->setDefaultLang($newlang);
+					}
+					$model = $object->model_pdf;
+					$ret = $object->fetch($id); // Reload to get new records
+					if ($ret > 0) {
+						$object->fetch_thirdparty();
+					}
+
+					$object->generateDocument($model, $outputlangs, $hidedetails, $hidedesc, $hideref);
+				}
 			}
 		}
 	} elseif ($action == 'setecheance' && $usercancreate) {
@@ -582,6 +599,7 @@ if (empty($reshook)) {
 							$reshook = $hookmanager->executeHooks('createFrom', $parameters, $object, $action); // Note that $action and $object may have been
 																											   // modified by hook
 							if ($reshook < 0) {
+								setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 								$error++;
 							}
 						} else {
@@ -838,7 +856,7 @@ if (empty($reshook)) {
 		$prod_entry_mode = GETPOST('prod_entry_mode');
 		if ($prod_entry_mode == 'free') {
 			$idprod = 0;
-			$tva_tx = (GETPOST('tva_tx') ? price2num(GETPOST('tva_tx')) : 0);
+			$tva_tx = (GETPOST('tva_tx') ? price2num(preg_replace('/\s*\(.*\)/', '', GETPOST('tva_tx'))) : 0);
 		} else {
 			$idprod = GETPOST('idprod', 'int');
 			$tva_tx = '';
@@ -1393,7 +1411,7 @@ if (empty($reshook)) {
 			$error++;
 		}
 		if (!$error) {
-			$result = $object->updateExtraField(GETPOST('attribute', 'restricthtml'), 'PROPAL_MODIFY', $user);
+			$result = $object->insertExtraFields('PROPAL_MODIFY');
 			if ($result < 0) {
 				setEventMessages($object->error, $object->errors, 'errors');
 				$error++;
@@ -1590,7 +1608,7 @@ if ($action == 'create') {
 	$shipping_method_id = 0;
 	if ($socid > 0) {
 		print '<td>';
-		print $soc->getNomUrl(1);
+		print $soc->getNomUrl(1, 'customer');
 		print '<input type="hidden" name="socid" value="'.$soc->id.'">';
 		print '</td>';
 		if (!empty($conf->global->SOCIETE_ASK_FOR_SHIPPING_METHOD) && !empty($soc->shipping_method_id)) {
@@ -1599,7 +1617,7 @@ if ($action == 'create') {
 		//$warehouse_id       = $soc->warehouse_id;
 	} else {
 		print '<td>';
-		print img_picto('', 'company').$form->select_company('', 'socid', '(s.client = 1 OR s.client = 2 OR s.client = 3) AND status=1', 'SelectThirdParty', 0, 0, null, 0, 'minwidth300 maxwidth500 widthcentpercentminusxx');
+		print img_picto('', 'company').$form->select_company('', 'socid', '((s.client = 1 OR s.client = 2 OR s.client = 3) AND status=1)', 'SelectThirdParty', 0, 0, null, 0, 'minwidth300 maxwidth500 widthcentpercentminusxx');
 		// reload page to retrieve customer informations
 		if (empty($conf->global->RELOAD_PAGE_ON_CUSTOMER_CHANGE_DISABLED)) {
 			print '<script type="text/javascript">
@@ -1649,13 +1667,13 @@ if ($action == 'create') {
 	// Terms of payment
 	print '<tr><td class="nowrap">'.$langs->trans('PaymentConditionsShort').'</td><td>';
 	print img_picto('', 'paiment');
-	$form->select_conditions_paiements((GETPOSTISSET('cond_reglement_id') && GETPOST('cond_reglement_id') != 0) ? GETPOST('cond_reglement_id', 'int') : $soc->cond_reglement_id, 'cond_reglement_id', -1, 1);
+	$form->select_conditions_paiements((GETPOSTISSET('cond_reglement_id') && GETPOST('cond_reglement_id', 'int') != 0) ? GETPOST('cond_reglement_id', 'int') : $soc->cond_reglement_id, 'cond_reglement_id', -1, 1);
 	print '</td></tr>';
 
 	// Mode of payment
 	print '<tr><td>'.$langs->trans('PaymentMode').'</td><td>';
-	print img_picto('', 'bank').'&ensp;';
-	$form->select_types_paiements((GETPOSTISSET('mode_reglement_id') ? GETPOST('mode_reglement_id', 'int') : $soc->mode_reglement_id), 'mode_reglement_id', 'CRDT', 0, 1, 0, 0, 1, 'maxwidth200 widthcentpercentminusx');
+	print img_picto('', 'bank');
+	$form->select_types_paiements((GETPOSTISSET('mode_reglement_id') && GETPOST('mode_reglement_id', 'int') != 0) ? GETPOST('mode_reglement_id', 'int') : $soc->mode_reglement_id, 'mode_reglement_id', 'CRDT', 0, 1, 0, 0, 1, 'maxwidth200 widthcentpercentminusx');
 	print '</td></tr>';
 
 	// Bank Account

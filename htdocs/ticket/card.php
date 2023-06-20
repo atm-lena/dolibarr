@@ -289,7 +289,7 @@ if (empty($reshook)) {
 
 			if (!$error) {
 				// File transfer
-				$object->copyFilesForTicket();
+				$object->copyFilesForTicket('');		// trackid is forced to '' because files were uploaded when no id for ticket exists yet and trackid was ''
 			}
 
 			if (!$error) {
@@ -738,6 +738,7 @@ if ($action == 'create' || $action == 'presend') {
 
 	print load_fiche_titre($langs->trans('NewTicket'), '', 'ticket');
 
+	$formticket->trackid = '';		// TODO Use a unique key to avoid conflict in upload file feature
 	$formticket->withfromsocid = $socid ? $socid : $user->socid;
 	$formticket->withfromcontactid = $contactid ? $contactid : '';
 	$formticket->withtitletopic = 1;
@@ -751,7 +752,7 @@ if ($action == 'create' || $action == 'presend') {
 
 	$formticket->withcancel = 1;
 
-	$formticket->showForm(1, 'create', 0);
+	$formticket->showForm(1, 'create', 0, null, $action);
 	/*} elseif ($action == 'edit' && $user->rights->ticket->write && $object->fk_statut < Ticket::STATUS_CLOSED) {
 	$formticket = new FormTicket($db);
 

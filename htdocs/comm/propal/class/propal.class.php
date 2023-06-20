@@ -317,8 +317,8 @@ class Propal extends CommonObject
 		'fk_currency' =>array('type'=>'varchar(3)', 'label'=>'Currency', 'enabled'=>1, 'visible'=>-1, 'position'=>155),
 		'fk_cond_reglement' =>array('type'=>'integer', 'label'=>'PaymentTerm', 'enabled'=>1, 'visible'=>-1, 'position'=>160),
 		'fk_mode_reglement' =>array('type'=>'integer', 'label'=>'PaymentMode', 'enabled'=>1, 'visible'=>-1, 'position'=>165),
-		'note_private' =>array('type'=>'text', 'label'=>'NotePublic', 'enabled'=>1, 'visible'=>0, 'position'=>170),
-		'note_public' =>array('type'=>'text', 'label'=>'NotePrivate', 'enabled'=>1, 'visible'=>0, 'position'=>175),
+		'note_private' =>array('type'=>'text', 'label'=>'NotePrivate', 'enabled'=>1, 'visible'=>0, 'position'=>170),
+		'note_public' =>array('type'=>'text', 'label'=>'NotePublic', 'enabled'=>1, 'visible'=>0, 'position'=>175),
 		'model_pdf' =>array('type'=>'varchar(255)', 'label'=>'PDFTemplate', 'enabled'=>1, 'visible'=>0, 'position'=>180),
 		'date_livraison' =>array('type'=>'date', 'label'=>'DateDeliveryPlanned', 'enabled'=>1, 'visible'=>-1, 'position'=>185),
 		'fk_shipping_method' =>array('type'=>'integer', 'label'=>'ShippingMethod', 'enabled'=>1, 'visible'=>-1, 'position'=>190),
@@ -1425,6 +1425,8 @@ class Propal extends CommonObject
 				$action = '';
 				$reshook = $hookmanager->executeHooks('createFrom', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
 				if ($reshook < 0) {
+					$this->errors += $hookmanager->errors;
+					$this->error = $hookmanager->error;
 					$error++;
 				}
 			}
@@ -1445,16 +1447,18 @@ class Propal extends CommonObject
 	/**
 	 *	Load a proposal from database. Get also lines.
 	 *
-	 *	@param      int			$rowid		id of object to load
-	 *	@param		string		$ref		Ref of proposal
-	 *	@param		string		$ref_ext	Ref ext of proposal
-	 *	@return     int         			>0 if OK, <0 if KO
+	 *	@param      int			$rowid			id of object to load
+	 *	@param		string		$ref			Ref of proposal
+	 *	@param		string		$ref_ext		Ref ext of proposal
+	 *	@param		int			$forceentity	Entity id to force
+	 *	@return     int         				>0 if OK, <0 if KO
 	 */
-	public function fetch($rowid, $ref = '', $ref_ext = '')
+	public function fetch($rowid, $ref = '', $ref_ext = '', $forceentity = 0)
 	{
 		$sql = "SELECT p.rowid, p.ref, p.entity, p.remise, p.remise_percent, p.remise_absolue, p.fk_soc";
 		$sql .= ", p.total_ttc, p.total_tva, p.localtax1, p.localtax2, p.total_ht";
 		$sql .= ", p.datec";
+		$sql .= ", p.date_signature as dates";
 		$sql .= ", p.date_valid as datev";
 		$sql .= ", p.datep as dp";
 		$sql .= ", p.fin_validite as dfv";
@@ -1488,10 +1492,15 @@ class Propal extends CommonObject
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_input_reason as dr ON p.fk_input_reason = dr.rowid';
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_incoterms as i ON p.fk_incoterms = i.rowid';
 
-		if ($ref) {
-			$sql .= " WHERE p.entity IN (".getEntity('propal').")"; // Dont't use entity if you use rowid
+		if (!empty($ref)) {
+			if (!empty($forceentity)) {
+				$sql .= " WHERE p.entity = ".(int) $forceentity; // Check only the current entity because we may have the same reference in several entities
+			} else {
+				$sql .= " WHERE p.entity IN (".getEntity('propal').")";
+			}
 			$sql .= " AND p.ref='".$this->db->escape($ref)."'";
 		} else {
+			// Dont't use entity if you use rowid
 			$sql .= " WHERE p.rowid = ".((int) $rowid);
 		}
 
@@ -1538,6 +1547,7 @@ class Propal extends CommonObject
 				$this->date_creation = $this->db->jdate($obj->datec); //Creation date
 				$this->date_validation = $this->db->jdate($obj->datev); //Validation date
 				$this->date_modification = $this->db->jdate($obj->date_modification); // tms
+				$this->date_signature = $this->db->jdate($obj->dates); // Signature date
 				$this->date                 = $this->db->jdate($obj->dp); // Proposal date
 				$this->datep                = $this->db->jdate($obj->dp); // deprecated
 				$this->fin_validite         = $this->db->jdate($obj->dfv);
@@ -1989,7 +1999,7 @@ class Propal extends CommonObject
 			$this->db->begin();
 
 			$sql = "UPDATE ".MAIN_DB_PREFIX."propal SET datep = '".$this->db->idate($date)."'";
-			$sql .= " WHERE rowid = ".((int) $this->id)." AND fk_statut = ".self::STATUS_DRAFT;
+			$sql .= " WHERE rowid = ".((int) $this->id);
 
 			dol_syslog(__METHOD__, LOG_DEBUG);
 			$resql = $this->db->query($sql);
@@ -2045,7 +2055,7 @@ class Propal extends CommonObject
 			$this->db->begin();
 
 			$sql = "UPDATE ".MAIN_DB_PREFIX."propal SET fin_validite = ".($date_fin_validite != '' ? "'".$this->db->idate($date_fin_validite)."'" : 'null');
-			$sql .= " WHERE rowid = ".((int) $this->id)." AND fk_statut = ".self::STATUS_DRAFT;
+			$sql .= " WHERE rowid = ".((int) $this->id);
 
 			dol_syslog(__METHOD__, LOG_DEBUG);
 			$resql = $this->db->query($sql);
@@ -3713,7 +3723,7 @@ class Propal extends CommonObject
 	 *  @param      int			$hidedetails    Hide details of lines
 	 *  @param      int			$hidedesc       Hide description
 	 *  @param      int			$hideref        Hide ref
-	 *  @param   null|array  $moreparams     Array to provide more information
+	 *  @param   	null|array  $moreparams     Array to provide more information
 	 * 	@return     int         				0 if KO, 1 if OK
 	 */
 	public function generateDocument($modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0, $moreparams = null)

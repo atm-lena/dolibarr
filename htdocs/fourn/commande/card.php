@@ -590,7 +590,7 @@ if (empty($reshook)) {
 					$localtax1_tx,
 					$localtax2_tx,
 					$idprod,
-					0, // We already have the $idprod always defined
+					$productsupplier->product_fourn_price_id,
 					$ref_supplier,
 					$remise_percent,
 					$price_base_type,
@@ -1215,7 +1215,7 @@ if (empty($reshook)) {
 			$object->fk_incoterms = GETPOST('incoterm_id', 'int');
 			$object->location_incoterms = GETPOST('location_incoterms', 'alpha');
 			$object->multicurrency_code = GETPOST('multicurrency_code', 'alpha');
-			$object->multicurrency_tx = GETPOST('originmulticurrency_tx', 'int');
+			$object->multicurrency_tx = price2num(GETPOST('originmulticurrency_tx', 'alpha'));
 			$object->fk_project       = GETPOST('projectid', 'int');
 
 			// Fill array 'array_options' with data from add form
@@ -1365,6 +1365,7 @@ if (empty($reshook)) {
 							$reshook = $hookmanager->executeHooks('createFrom', $parameters, $object, $action); // Note that $action and $object may have been
 
 							if ($reshook < 0) {
+								setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 								$error++;
 							}
 						} else {
@@ -2667,7 +2668,7 @@ if ($action == 'create') {
 			$delallowed = $usercancreate;
 			$modelpdf = (!empty($object->model_pdf) ? $object->model_pdf : (empty($conf->global->COMMANDE_SUPPLIER_ADDON_PDF) ? '' : $conf->global->COMMANDE_SUPPLIER_ADDON_PDF));
 
-			print $formfile->showdocuments('commande_fournisseur', $objref, $filedir, $urlsource, $genallowed, $delallowed, $modelpdf, 1, 0, 0, 0, 0, '', '', '', $object->thirdparty->default_lang);
+			print $formfile->showdocuments('commande_fournisseur', $objref, $filedir, $urlsource, $genallowed, $delallowed, $modelpdf, 1, 0, 0, 0, 0, '', '', '', $object->thirdparty->default_lang, '', $object);
 			$somethingshown = $formfile->numoffiles;
 
 			// Show links to link elements

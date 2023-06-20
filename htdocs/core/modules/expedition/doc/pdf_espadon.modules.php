@@ -140,6 +140,8 @@ class pdf_espadon extends ModelePdfExpedition
 		$this->marge_basse = isset($conf->global->MAIN_PDF_MARGIN_BOTTOM) ? $conf->global->MAIN_PDF_MARGIN_BOTTOM : 10;
 
 		$this->option_logo = 1; // Display logo
+		$this->option_draft_watermark = 1; // Support add of a watermark on drafts
+		$this->watermark = '';
 
 		// Get source company
 		$this->emetteur = $mysoc;
@@ -179,6 +181,11 @@ class pdf_espadon extends ModelePdfExpedition
 
 		// Load traductions files required by page
 		$outputlangs->loadLangs(array("main", "bills", "orders", "products", "dict", "companies", "propal", "deliveries", "sendings", "productbatch"));
+
+		// Show Draft Watermark
+		if ($object->statut == $object::STATUS_DRAFT && (!empty($conf->global->SHIPPING_DRAFT_WATERMARK))) {
+			$this->watermark = $conf->global->SHIPPING_DRAFT_WATERMARK;
+		}
 
 		global $outputlangsbis;
 		$outputlangsbis = null;
@@ -361,11 +368,14 @@ class pdf_espadon extends ModelePdfExpedition
 
 				if (!empty($notetoshow) || !empty($object->tracking_number)) {
 					$tab_top -= 2;
+					$tab_topbeforetrackingnumber = $tab_top;
 
 					// Tracking number
 					if (!empty($object->tracking_number)) {
+						$height_trackingnumber = 4;
+
 						$pdf->SetFont('', 'B', $default_font_size - 2);
-						$pdf->writeHTMLCell(60, 4, $this->posxdesc - 1, $tab_top - 1, $outputlangs->transnoentities("TrackingNumber") . " : " . $object->tracking_number, 0, 1, false, true, 'L');
+						$pdf->writeHTMLCell(60, $height_trackingnumber, $this->posxdesc - 1, $tab_top - 1, $outputlangs->transnoentities("TrackingNumber") . " : " . $object->tracking_number, 0, 1, false, true, 'L');
 
 						$tab_top_alt = $pdf->GetY();
 						$object->getUrlTrackingStatus($object->tracking_number);
@@ -383,19 +393,20 @@ class pdf_espadon extends ModelePdfExpedition
 									$label .= " : ";
 									$label .= $object->tracking_url;
 								}
-								$pdf->SetFont('', 'B', $default_font_size - 2);
-								$pdf->writeHTMLCell(60, 4, $this->posxdesc - 1, $tab_top_alt, $label, 0, 1, false, true, 'L');
 
-								$tab_top = $pdf->GetY();
+								$height_trackingnumber += 4;
+								$pdf->SetFont('', 'B', $default_font_size - 2);
+								$pdf->writeHTMLCell(60, $height_trackingnumber, $this->posxdesc - 1, $tab_top_alt, $label, 0, 1, false, true, 'L');
 							}
 						}
+						$tab_top = $pdf->GetY();
 					}
 
 
 					// Notes
 					$pagenb = $pdf->getPage();
-					if (!empty($notetoshow)) {
-						$tab_top -= 2;
+					if (!empty($notetoshow) || !empty($object->tracking_number)) {
+						$tab_top -= 1;
 
 						$tab_width = $this->page_largeur - $this->marge_gauche - $this->marge_droite;
 						$pageposbeforenote = $pagenb;
@@ -458,11 +469,21 @@ class pdf_espadon extends ModelePdfExpedition
 								$pdf->SetDrawColor(128, 128, 128);
 								// Draw note frame
 								if ($i > $pageposbeforenote) {
-									$height_note = $this->page_hauteur - ($tab_top_newpage + $heightforfooter);
-									$pdf->Rect($this->marge_gauche, $tab_top_newpage - 1, $tab_width, $height_note + 1);
+									if (empty($height_trackingnumber)) {
+										$height_note = $this->page_hauteur - ($tab_top_newpage + $heightforfooter);
+									} else {
+										$height_note = $this->page_hauteur - ($tab_top_newpage + $heightforfooter) + $height_trackingnumber + 1;
+										$tab_top_newpage = $tab_topbeforetrackingnumber;
+									}
+									$pdf->Rect($this->marge_gauche, $tab_top_newpage - 1, $tab_width, $height_note + 2);
 								} else {
-									$height_note = $this->page_hauteur - ($tab_top + $heightforfooter);
-									$pdf->Rect($this->marge_gauche, $tab_top - 1, $tab_width, $height_note + 1);
+									if (empty($height_trackingnumber)) {
+										$height_note = $this->page_hauteur - ($tab_top + $heightforfooter);
+									} else {
+										$height_note = $this->page_hauteur - ($tab_top + $heightforfooter)+ $height_trackingnumber + 1;
+										$tab_top = $tab_topbeforetrackingnumber;
+									}
+									$pdf->Rect($this->marge_gauche, $tab_top - 1, $tab_width, $height_note + 2);
 								}
 
 								// Add footer
@@ -482,8 +503,13 @@ class pdf_espadon extends ModelePdfExpedition
 						{
 							$pdf->commitTransaction();
 							$posyafter = $pdf->GetY();
-							$height_note = $posyafter - $tab_top;
-							$pdf->Rect($this->marge_gauche, $tab_top - 1, $tab_width, $height_note + 1);
+							if (empty($height_trackingnumber)) {
+								$height_note = $posyafter - $tab_top + 1;
+							} else {
+								$height_note = $posyafter - $tab_top + $height_trackingnumber + 1;
+								$tab_top = $tab_topbeforetrackingnumber;
+							}
+							$pdf->Rect($this->marge_gauche, $tab_top - 1, $tab_width, $height_note + 2);
 
 
 							if ($posyafter > ($this->page_hauteur - ($heightforfooter + $heightforfreetext + 20))) {
@@ -700,6 +726,9 @@ class pdf_espadon extends ModelePdfExpedition
 						$pdf->setPageOrientation('', 1, 0); // The only function to edit the bottom margin of current page to set it.
 						if (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD)) {
 							$this->_pagehead($pdf, $object, 0, $outputlangs);
+						}
+						if (!empty($tplidx)) {
+							$pdf->useTemplate($tplidx);
 						}
 					}
 					if (isset($object->lines[$i + 1]->pagebreak) && $object->lines[$i + 1]->pagebreak) {
@@ -947,11 +976,6 @@ class pdf_espadon extends ModelePdfExpedition
 
 		pdf_pagehead($pdf, $outputlangs, $this->page_hauteur);
 
-		// Show Draft Watermark
-		if ($object->statut == 0 && (!empty($conf->global->SHIPPING_DRAFT_WATERMARK))) {
-					pdf_watermark($pdf, $outputlangs, $this->page_hauteur, $this->page_largeur, 'mm', $conf->global->SHIPPING_DRAFT_WATERMARK);
-		}
-
 		//Prepare next
 		$pdf->SetTextColor(0, 0, 60);
 		$pdf->SetFont('', 'B', $default_font_size + 3);
@@ -964,8 +988,16 @@ class pdf_espadon extends ModelePdfExpedition
 		$pdf->SetXY($this->marge_gauche, $posy);
 
 		// Logo
-		$logo = $conf->mycompany->dir_output.'/logos/'.$this->emetteur->logo;
 		if ($this->emetteur->logo) {
+			$logodir = $conf->mycompany->dir_output;
+			if (!empty($conf->mycompany->multidir_output[$object->entity])) {
+				$logodir = $conf->mycompany->multidir_output[$object->entity];
+			}
+			if (empty($conf->global->MAIN_PDF_USE_LARGE_LOGO)) {
+				$logo = $logodir.'/logos/thumbs/'.$this->emetteur->logo_small;
+			} else {
+				$logo = $logodir.'/logos/'.$this->emetteur->logo;
+			}
 			if (is_readable($logo)) {
 				$height = pdf_getHeightForLogo($logo);
 				$pdf->Image($logo, $this->marge_gauche, $posy, 0, $height); // width=0 (auto)
@@ -1186,7 +1218,7 @@ class pdf_espadon extends ModelePdfExpedition
 	{
 		global $conf;
 		$showdetails = empty($conf->global->MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS) ? 0 : $conf->global->MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS;
-		return pdf_pagefoot($pdf, $outputlangs, 'SHIPPING_FREE_TEXT', $this->emetteur, $this->marge_basse, $this->marge_gauche, $this->page_hauteur, $object, $showdetails, $hidefreetext);
+		return pdf_pagefoot($pdf, $outputlangs, 'SHIPPING_FREE_TEXT', $this->emetteur, $this->marge_basse, $this->marge_gauche, $this->page_hauteur, $object, $showdetails, $hidefreetext, $this->page_largeur, $this->watermark);
 	}
 
 	/**

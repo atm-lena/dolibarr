@@ -1168,6 +1168,8 @@ class SupplierProposal extends CommonObject
 				$action = '';
 				$reshook = $hookmanager->executeHooks('createFrom', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
 				if ($reshook < 0) {
+					$this->errors += $hookmanager->errors;
+					$this->error = $hookmanager->error;
 					$error++;
 				}
 			}
@@ -2917,7 +2919,7 @@ class SupplierProposalLine extends CommonObjectLine
 			$this->product_label	= $objp->product_label;
 			$this->product_desc		= $objp->product_desc;
 
-			$this->ref_fourn = $objp->ref_produit_forun;
+			$this->ref_fourn = $objp->ref_produit_fourn;
 
 			// Multicurrency
 			$this->fk_multicurrency = $objp->fk_multicurrency;
@@ -3046,7 +3048,7 @@ class SupplierProposalLine extends CommonObjectLine
 		$sql .= " ".price2num($this->localtax2_tx).",";
 		$sql .= " '".$this->db->escape($this->localtax1_type)."',";
 		$sql .= " '".$this->db->escape($this->localtax2_type)."',";
-		$sql .= " ".(!empty($this->subprice) ? price2num($this->subprice, 'MU') : "null").",";
+		$sql .= " ".price2num($this->subprice, 'MU') .",";
 		$sql .= " ".((float) $this->remise_percent).",";
 		$sql .= " ".(isset($this->info_bits) ? ((int) $this->info_bits) : "null").",";
 		$sql .= " ".price2num($this->total_ht, 'MT').",";

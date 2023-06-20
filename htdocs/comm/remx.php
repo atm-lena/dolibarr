@@ -62,7 +62,7 @@ if (GETPOST('cancel', 'alpha') && !empty($backtopage)) {
 	 exit;
 }
 
-if ($action == 'confirm_split' && GETPOST("confirm", "alpha") == 'yes' && $user->rights->societe->creer) {
+if ($action == 'confirm_split' && GETPOST("confirm", "alpha") == 'yes' && ($user->rights->societe->creer || $user->rights->facture->creer)) {
 	//if ($user->rights->societe->creer)
 	//if ($user->rights->facture->creer)
 
@@ -153,7 +153,7 @@ if ($action == 'confirm_split' && GETPOST("confirm", "alpha") == 'yes' && $user-
 	}
 }
 
-if ($action == 'setremise' && $user->rights->societe->creer) {
+if ($action == 'setremise' && ($user->rights->societe->creer || $user->rights->facture->creer)) {
 	//if ($user->rights->societe->creer)
 	//if ($user->rights->facture->creer)
 
@@ -192,7 +192,7 @@ if ($action == 'setremise' && $user->rights->societe->creer) {
 	}
 }
 
-if (GETPOST('action', 'aZ09') == 'confirm_remove' && GETPOST("confirm") == 'yes' && $user->rights->societe->creer) {
+if (GETPOST('action', 'aZ09') == 'confirm_remove' && GETPOST("confirm") == 'yes' && ($user->rights->societe->creer || $user->rights->facture->creer)) {
 	//if ($user->rights->societe->creer)
 	//if ($user->rights->facture->creer)
 
@@ -425,12 +425,12 @@ if ($socid > 0) {
 			print '<td class="nowrap">'.$langs->trans("ConsumedBy").'</td>';
 			print '<td class="right">'.$langs->trans("AmountHT").'</td>';
 			if (!empty($conf->multicurrency->enabled)) {
-				print '<td class="right">'.$langs->trans("MulticurrencyAmountHT").'</td>';
+				print '<td class="right tdoverflowmax125" title="'.dol_escape_htmltag($langs->trans("MulticurrencyAmountHT")).'">'.$langs->trans("MulticurrencyAmountHT").'</td>';
 			}
 			print '<td class="right">'.$langs->trans("VATRate").'</td>';
 			print '<td class="right">'.$langs->trans("AmountTTC").'</td>';
 			if (!empty($conf->multicurrency->enabled)) {
-				print '<td class="right">'.$langs->trans("MulticurrencyAmountTTC").'</td>';
+				print '<td class="right tdoverflowmax125" title="'.dol_escape_htmltag($langs->trans("MulticurrencyAmountTTC")).'">'.$langs->trans("MulticurrencyAmountTTC").'</td>';
 			}
 			print '<td width="100" class="center">'.$langs->trans("DiscountOfferedBy").'</td>';
 			print '<td width="50">&nbsp;</td>';
@@ -563,12 +563,12 @@ if ($socid > 0) {
 			print '<td class="nowrap">'.$langs->trans("ConsumedBy").'</td>';
 			print '<td class="right">'.$langs->trans("AmountHT").'</td>';
 			if (!empty($conf->multicurrency->enabled)) {
-				print '<td class="right">'.$langs->trans("MulticurrencyAmountHT").'</td>';
+				print '<td class="right tdoverflowmax125" title="'.dol_escape_htmltag($langs->trans("MulticurrencyAmountHT")).'">'.$langs->trans("MulticurrencyAmountHT").'</td>';
 			}
 			print '<td class="right">'.$langs->trans("VATRate").'</td>';
 			print '<td class="right">'.$langs->trans("AmountTTC").'</td>';
 			if (!empty($conf->multicurrency->enabled)) {
-				print '<td class="right">'.$langs->trans("MulticurrencyAmountTTC").'</td>';
+				print '<td class="right tdoverflowmax125" title="'.dol_escape_htmltag($langs->trans("MulticurrencyAmountTTC")).'">'.$langs->trans("MulticurrencyAmountTTC").'</td>';
 			}
 			print '<td width="100" class="center">'.$langs->trans("DiscountOfferedBy").'</td>';
 			print '<td width="50">&nbsp;</td>';
@@ -736,12 +736,12 @@ if ($socid > 0) {
 			print '<td class="nowrap">'.$langs->trans("ConsumedBy").'</td>';
 			print '<td class="right">'.$langs->trans("AmountHT").'</td>';
 			if (!empty($conf->multicurrency->enabled)) {
-				print '<td class="right">'.$langs->trans("MulticurrencyAmountHT").'</td>';
+				print '<td class="right tdoverflowmax125" title="'.dol_escape_htmltag($langs->trans("MulticurrencyAmountHT")).'">'.$langs->trans("MulticurrencyAmountHT").'</td>';
 			}
 			print '<td class="right">'.$langs->trans("VATRate").'</td>';
 			print '<td class="right">'.$langs->trans("AmountTTC").'</td>';
 			if (!empty($conf->multicurrency->enabled)) {
-				print '<td class="right">'.$langs->trans("MulticurrencyAmountTTC").'</td>';
+				print '<td class="right tdoverflowmax125" title="'.dol_escape_htmltag($langs->trans("MulticurrencyAmountTTC")).'">'.$langs->trans("MulticurrencyAmountTTC").'</td>';
 			}
 			print '<td width="100" class="center">'.$langs->trans("Author").'</td>';
 			print '<td width="50">&nbsp;</td>';
@@ -896,12 +896,12 @@ if ($socid > 0) {
 			print '<td class="nowrap">'.$langs->trans("ConsumedBy").'</td>';
 			print '<td class="right">'.$langs->trans("AmountHT").'</td>';
 			if (!empty($conf->multicurrency->enabled)) {
-				print '<td class="right">'.$langs->trans("MulticurrencyAmountHT").'</td>';
+				print '<td class="right toverflowmax125" title="'.dol_escape_htmltag($langs->trans("MulticurrencyAmountHT")).'">'.$langs->trans("MulticurrencyAmountHT").'</td>';
 			}
 			print '<td class="right">'.$langs->trans("VATRate").'</td>';
 			print '<td class="right">'.$langs->trans("AmountTTC").'</td>';
 			if (!empty($conf->multicurrency->enabled)) {
-				print '<td class="right">'.$langs->trans("MulticurrencyAmountTTC").'</td>';
+				print '<td class="right tdoverflowmax125" title="'.dol_escape_htmltag($langs->trans("MulticurrencyAmountTTC")).'">'.$langs->trans("MulticurrencyAmountTTC").'</td>';
 			}
 			print '<td width="100" class="center">'.$langs->trans("Author").'</td>';
 			print '<td width="50">&nbsp;</td>';

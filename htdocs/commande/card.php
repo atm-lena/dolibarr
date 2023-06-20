@@ -461,6 +461,7 @@ if (empty($reshook)) {
 						// Note that $action and $object may be modified by hook
 						$reshook = $hookmanager->executeHooks('createFrom', $parameters, $object, $action);
 						if ($reshook < 0) {
+							setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 							$error++;
 						}
 					} else {
@@ -1608,7 +1609,7 @@ if ($action == 'create' && $usercancreate) {
 		print '</td>';
 	} else {
 		print '<td>';
-		print img_picto('', 'company').$form->select_company('', 'socid', '(s.client = 1 OR s.client = 2 OR s.client = 3)', 'SelectThirdParty', 0, 0, null, 0, 'minwidth175 maxwidth500 widthcentpercentminusxx');
+		print img_picto('', 'company').$form->select_company('', 'socid', '((s.client = 1 OR s.client = 2 OR s.client = 3) AND s.status=1)', 'SelectThirdParty', 0, 0, null, 0, 'minwidth175 maxwidth500 widthcentpercentminusxx');
 		// reload page to retrieve customer informations
 		if (empty($conf->global->RELOAD_PAGE_ON_CUSTOMER_CHANGE_DISABLED)) {
 			print '<script type="text/javascript">
@@ -1632,8 +1633,8 @@ if ($action == 'create' && $usercancreate) {
 	if ($socid > 0) {
 		// Contacts (ask contact only if thirdparty already defined).
 		print "<tr><td>".$langs->trans("DefaultContact").'</td><td>';
-		print img_picto('', 'contact');
-		print $form->selectcontacts($soc->id, $contactid, 'contactid', 1, $srccontactslist, '', 1);
+		print img_picto('', 'contact', 'class="pictofixedwidth"');
+		print $form->selectcontacts($soc->id, $contactid, 'contactid', 1, $srccontactslist, '', 1, 'maxwidth200 widthcentpercentminusx');
 		print '</td></tr>';
 
 		// Ligne info remises tiers
@@ -1670,8 +1671,8 @@ if ($action == 'create' && $usercancreate) {
 
 	// Terms of the settlement
 	print '<tr><td class="nowrap">'.$langs->trans('PaymentConditionsShort').'</td><td>';
-	print img_picto('', 'paiment');
-	$form->select_conditions_paiements($cond_reglement_id, 'cond_reglement_id', - 1, 1);
+	print img_picto('', 'payment', 'class="pictofixedwidth"');
+	$form->select_conditions_paiements($cond_reglement_id, 'cond_reglement_id', - 1, 1, 0, 'maxwidth200 widthcentpercentminusx');
 	print '</td></tr>';
 
 	// Payment mode
@@ -1690,7 +1691,7 @@ if ($action == 'create' && $usercancreate) {
 	// Shipping Method
 	if (!empty($conf->expedition->enabled)) {
 		print '<tr><td>'.$langs->trans('SendingMethod').'</td><td>';
-		print img_picto('', 'object_dollyrevert', 'class="pictofixedwidth"');
+		print img_picto('', 'object_dolly', 'class="pictofixedwidth"');
 		print $form->selectShippingMethod($shipping_method_id, 'shipping_method_id', '', 1, '', 0, 'maxwidth200 widthcentpercentminusx');
 		print '</td></tr>';
 	}
@@ -2563,7 +2564,7 @@ if ($action == 'create' && $usercancreate) {
 				}
 
 				// Create intervention
-				if ($conf->ficheinter->enabled) {
+				if (!empty($conf->ficheinter->enabled)) {
 					$langs->load("interventions");
 
 					if ($object->statut > Commande::STATUS_DRAFT && $object->statut < Commande::STATUS_CLOSED && $object->getNbOfServicesLines() > 0) {

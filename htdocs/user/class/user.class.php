@@ -675,34 +675,46 @@ class User extends CommonObject
 	public function hasRight($module, $permlevel1, $permlevel2 = '')
 	{
 		global $conf;
-
 		// For compatibility with bad naming permissions on module
 		$moduletomoduletouse = array(
 			'contract' => 'contrat',
 			'member' => 'adherent',	// We must check $user->rights->adherent...
 			'mo' => 'mrp',
 			'order' => 'commande',
-			'product' => 'produit',	// We must check $user->rights->produit...
+			//'product' => 'produit',	// We must check $user->rights->produit...
 			'project' => 'projet',
 			'shipping' => 'expedition',
 			'task' => 'task@projet',
 			'fichinter' => 'ficheinter',
+			'propale' => 'propal',
 			'inventory' => 'stock',
 			'invoice' => 'facture',
 			'invoice_supplier' => 'fournisseur',
+			'order_supplier' => 'fournisseur',
 			'knowledgerecord' => 'knowledgerecord@knowledgemanagement',
 			'skill@hrm' => 'all@hrm', // skill / job / position objects rights are for the moment grouped into right level "all"
 			'job@hrm' => 'all@hrm', // skill / job / position objects rights are for the moment grouped into right level "all"
 			'position@hrm' => 'all@hrm' // skill / job / position objects rights are for the moment grouped into right level "all"
 		);
+
 		if (!empty($moduletomoduletouse[$module])) {
 			$module = $moduletomoduletouse[$module];
 		}
 
+		$moduleRightsMapping = array(
+			'product' => 'produit',	// We must check $user->rights->produit...
+		);
+
+		$rightsPath = $module;
+		if (!empty($moduleRightsMapping[$rightsPath])) {
+			$rightsPath = $moduleRightsMapping[$rightsPath];
+		}
+
 		// If module is abc@module, we check permission user->rights->module->abc->permlevel1
-		$tmp = explode('@', $module, 2);
+		$tmp = explode('@', $rightsPath, 2);
 		if (! empty($tmp[1])) {
-			$module = $tmp[1];
+			if (strpos($module, '@') !== false) $module = $tmp[1];
+			$rightsPath = $tmp[1];
 			$permlevel2 = $permlevel1;
 			$permlevel1 = $tmp[0];
 		}
@@ -723,49 +735,49 @@ class User extends CommonObject
 		if ($permlevel1 == 'recruitmentcandidature') {
 			$permlevel1 = 'recruitmentjobposition';
 		}
-
-		//var_dump($module.' '.$permlevel1.' '.$permlevel2);
-		if (empty($module) || empty($this->rights) || empty($this->rights->$module) || empty($permlevel1)) {
+		//var_dump($module.' '.$permlevel1.' '.$permlevel2. ' '. $rightsPath);
+		//var_dump($this->rights);
+		if (empty($rightsPath) || empty($this->rights) || empty($this->rights->$rightsPath) || empty($permlevel1)) {
 			return 0;
 		}
 
 		if ($permlevel2) {
-			if (!empty($this->rights->$module->$permlevel1)) {
-				if (!empty($this->rights->$module->$permlevel1->$permlevel2)) {
-					return $this->rights->$module->$permlevel1->$permlevel2;
+			if (!empty($this->rights->$rightsPath->$permlevel1)) {
+				if (!empty($this->rights->$rightsPath->$permlevel1->$permlevel2)) {
+					return $this->rights->$rightsPath->$permlevel1->$permlevel2;
 				}
 				// For backward compatibility with old permissions called "lire", "creer", "create", "supprimer"
 				// instead of "read", "write", "delete"
-				if ($permlevel2 == 'read' && !empty($this->rights->$module->$permlevel1->lire)) {
-					return $this->rights->$module->lire;
+				if ($permlevel2 == 'read' && !empty($this->rights->$rightsPath->$permlevel1->lire)) {
+					return $this->rights->$rightsPath->lire;
 				}
-				if ($permlevel2 == 'write' && !empty($this->rights->$module->$permlevel1->creer)) {
-					return $this->rights->$module->create;
+				if ($permlevel2 == 'write' && !empty($this->rights->$rightsPath->$permlevel1->creer)) {
+					return $this->rights->$rightsPath->create;
 				}
-				if ($permlevel2 == 'write' && !empty($this->rights->$module->$permlevel1->create)) {
-					return $this->rights->$module->create;
+				if ($permlevel2 == 'write' && !empty($this->rights->$rightsPath->$permlevel1->create)) {
+					return $this->rights->$rightsPath->create;
 				}
-				if ($permlevel2 == 'delete' && !empty($this->rights->$module->$permlevel1->supprimer)) {
-					return $this->rights->$module->supprimer;
+				if ($permlevel2 == 'delete' && !empty($this->rights->$rightsPath->$permlevel1->supprimer)) {
+					return $this->rights->$rightsPath->supprimer;
 				}
 			}
 		} else {
-			if (!empty($this->rights->$module->$permlevel1)) {
-				return $this->rights->$module->$permlevel1;
+			if (!empty($this->rights->$rightsPath->$permlevel1)) {
+				return $this->rights->$rightsPath->$permlevel1;
 			}
 			// For backward compatibility with old permissions called "lire", "creer", "create", "supprimer"
 			// instead of "read", "write", "delete"
-			if ($permlevel1 == 'read' && !empty($this->rights->$module->lire)) {
-				return $this->rights->$module->lire;
+			if ($permlevel1 == 'read' && !empty($this->rights->$rightsPath->lire)) {
+				return $this->rights->$rightsPath->lire;
 			}
-			if ($permlevel1 == 'write' && !empty($this->rights->$module->creer)) {
-				return $this->rights->$module->create;
+			if ($permlevel1 == 'write' && !empty($this->rights->$rightsPath->creer)) {
+				return $this->rights->$rightsPath->create;
 			}
-			if ($permlevel1 == 'write' && !empty($this->rights->$module->create)) {
-				return $this->rights->$module->create;
+			if ($permlevel1 == 'write' && !empty($this->rights->$rightsPath->create)) {
+				return $this->rights->$rightsPath->create;
 			}
-			if ($permlevel1 == 'delete' && !empty($this->rights->$module->supprimer)) {
-				return $this->rights->$module->supprimer;
+			if ($permlevel1 == 'delete' && !empty($this->rights->$rightsPath->supprimer)) {
+				return $this->rights->$rightsPath->supprimer;
 			}
 		}
 
@@ -1847,7 +1859,7 @@ class User extends CommonObject
 		$sql .= ", login = '".$this->db->escape($this->login)."'";
 		$sql .= ", api_key = ".($this->api_key ? "'".$this->db->escape($this->api_key)."'" : "null");
 		$sql .= ", gender = ".($this->gender != -1 ? "'".$this->db->escape($this->gender)."'" : "null"); // 'man' or 'woman'
-		$sql .= ", birth=".(strval($this->birth) != '' ? "'".$this->db->idate($this->birth)."'" : 'null');
+		$sql .= ", birth=".(strval($this->birth) != '' ? "'".$this->db->idate($this->birth, 'tzserver')."'" : 'null');
 		if (!empty($user->admin)) {
 			$sql .= ", admin = ".(int) $this->admin; // admin flag can be set/unset only by an admin user
 		}
@@ -3631,7 +3643,7 @@ class User extends CommonObject
 				} else {
 					$sql .= ",".MAIN_DB_PREFIX."usergroup_user as ug";
 					$sql .= " WHERE ((ug.fk_user = t.rowid";
-					$sql .= " AND ug.entity IN (".getEntity('user')."))";
+					$sql .= " AND ug.entity IN (".getEntity('usergroup')."))";
 					$sql .= " OR t.entity = 0)"; // Show always superadmin
 				}
 			} else {

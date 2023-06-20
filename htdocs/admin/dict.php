@@ -911,7 +911,7 @@ if (GETPOST('actionadd') || GETPOST('actionmodify')) {
 			if ($db->errno() == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
 				setEventMessages($langs->transnoentities("ErrorRecordAlreadyExists"), null, 'errors');
 			} else {
-				dol_print_error($db);
+				setEventMessages($db->error(), null, 'errors');
 			}
 		}
 	}
@@ -1169,14 +1169,16 @@ if ($id) {
 		$sql .= natural_search("code_iso", $search_code);
 	} elseif ($search_code != '' && $id == 28) {
 		$sql .= natural_search("h.code", $search_code);
-	} elseif ($search_code != '' && $id == 32) {
+	} elseif ($search_code != '' && ($id == 7 || $id == 32)) {
 		$sql .= natural_search("a.code", $search_code);
 	} elseif ($search_code != '' && $id == 3) {
 		$sql .= natural_search("r.code_region", $search_code);
-	} elseif ($search_code != '' && $id == 7) {
-		$sql .= natural_search("a.code", $search_code);
-	} elseif ($search_code != '' && $id == 10) {
+	} elseif ($search_code != '' && ($id == 8 || $id == 10)) {
 		$sql .= natural_search("t.code", $search_code);
+	} elseif ($search_code != '' && $id == 1) {
+		$sql .= natural_search("f.code", $search_code);
+	} elseif ($search_code != '' && $id == 2) {
+		$sql .= natural_search("d.code_departement", $search_code);
 	} elseif ($search_code != '' && $id != 9) {
 		$sql .= natural_search("code", $search_code);
 	}
@@ -1976,7 +1978,7 @@ if ($id) {
 							} elseif ($value == 'fk_tva') {
 								foreach ($form->cache_vatrates as $key => $Tab) {
 									if ($form->cache_vatrates[$key]['rowid'] == $valuetoshow) {
-										$valuetoshow = $form->cache_vatrates[$key]['libtva'];
+										$valuetoshow = $form->cache_vatrates[$key]['label'];
 										break;
 									}
 								}
