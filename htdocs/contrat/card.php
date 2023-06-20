@@ -259,10 +259,6 @@ if (empty($reshook)) {
 				}
 
 				$id = $object->create($user);
-				if ($id < 0) {
-					setEventMessages($object->error, $object->errors, 'errors');
-				}
-
 				if ($id > 0) {
 					dol_include_once('/'.$element.'/class/'.$subelement.'.class.php');
 
@@ -368,11 +364,15 @@ if (empty($reshook)) {
 					$reshook = $hookmanager->executeHooks('createFrom', $parameters, $object, $action); // Note that $action and $object may have been
 					// modified by hook
 					if ($reshook < 0) {
+						setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 						$error++;
 					}
 				} else {
 					setEventMessages($object->error, $object->errors, 'errors');
 					$error++;
+				}
+				if ($error) {
+					$action = 'create';
 				}
 			} else {
 				$result = $object->create($user);
@@ -492,6 +492,8 @@ if (empty($reshook)) {
 				$tmpvat = price2num(preg_replace('/\s*\(.*\)/', '', $tva_tx));
 				$tmpprodvat = price2num(preg_replace('/\s*\(.*\)/', '', $prod->tva_tx));
 
+				$pu_ht = price2num($price_ht, 'MU');
+
 				// On reevalue prix selon taux tva car taux tva transaction peut etre different
 				// de ceux du produit par defaut (par exemple si pays different entre vendeur et acheteur).
 				if ($tmpvat != $tmpprodvat) {
@@ -517,7 +519,7 @@ if (empty($reshook)) {
 
 				$fk_unit = $prod->fk_unit;
 			} else {
-				$pu_ht = GETPOST('price_ht');
+				$pu_ht = price2num($price_ht, 'MU');
 				$price_base_type = 'HT';
 				$tva_tx = GETPOST('tva_tx') ?str_replace('*', '', GETPOST('tva_tx')) : 0; // tva_tx field may be disabled, so we use vat rate 0
 				$tva_npr = preg_match('/\*/', GETPOST('tva_tx')) ? 1 : 0;

@@ -132,7 +132,7 @@ $arrayfields = array(
 	'f.fk_statut'=>array('label'=>'Status', 'checked'=>1, 'position'=>1000),
 	'fd.description'=>array('label'=>"DescriptionOfLine", 'checked'=>1, 'enabled'=>empty($conf->global->FICHINTER_DISABLE_DETAILS) ? 1 : 0),
 	'fd.date'=>array('label'=>'DateOfLine', 'checked'=>1, 'enabled'=>empty($conf->global->FICHINTER_DISABLE_DETAILS) ? 1 : 0),
-	'fd.duree'=>array('label'=>'DurationOfLine', 'checked'=>1, 'enabled'=>empty($conf->global->FICHINTER_DISABLE_DETAILS) ? 1 : 0),
+	'fd.duree'=>array('label'=>'DurationOfLine', 'type'=> 'duration', 'checked'=>1, 'enabled'=>empty($conf->global->FICHINTER_DISABLE_DETAILS) ? 1 : 0), //type duration is here because in database, column 'duree' is double
 );
 // Extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_array_fields.tpl.php';
@@ -698,7 +698,7 @@ if ($resql) {
 		// Note public
 		if (!empty($arrayfields['f.note_public']['checked'])) {
 			print '<td class="center">';
-			print dol_escape_htmltag($obj->note_public);
+			print dol_string_nohtmltag($obj->note_public);
 			print '</td>';
 			if (!$i) {
 				$totalarray['nbfield']++;
@@ -707,7 +707,7 @@ if ($resql) {
 		// Note private
 		if (!empty($arrayfields['f.note_private']['checked'])) {
 			print '<td class="center">';
-			print dol_escape_htmltag($obj->note_private);
+			print dol_string_nohtmltag($obj->note_private);
 			print '</td>';
 			if (!$i) {
 				$totalarray['nbfield']++;
@@ -737,9 +737,8 @@ if ($resql) {
 			print '<td class="right">'.convertSecondToTime($obj->duree, 'allhourmin').'</td>';
 			if (!$i) {
 				$totalarray['nbfield']++;
-			}
-			if (!$i) {
 				$totalarray['pos'][$totalarray['nbfield']] = 'fd.duree';
+				$totalarray['type'][$totalarray['nbfield']] = $arrayfields['fd.duree']['type']; //pass the type for the list_print_total.tpl.php to manage durations
 			}
 			$totalarray['val']['fd.duree'] += $obj->duree;
 		}
@@ -762,6 +761,8 @@ if ($resql) {
 		$total += $obj->duree;
 		$i++;
 	}
+
+
 
 	// Show total line
 	include DOL_DOCUMENT_ROOT.'/core/tpl/list_print_total.tpl.php';

@@ -119,6 +119,8 @@ if ($action == 'update' && !GETPOST("cancel") && $user->rights->projet->creer) {
 				setEventMessages($object->error, $object->errors, 'errors');
 				$action = 'edit';
 			}
+		} else {
+			$action = 'edit';
 		}
 	} else {
 		$action = 'edit';
@@ -642,8 +644,7 @@ if ($id > 0 || !empty($ref)) {
 		// List of actions on element
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
 		$formactions = new FormActions($db);
-		$defaultthirdpartyid = $socid > 0 ? $socid : $object->project->socid;
-		$formactions->showactions($object, 'task', $defaultthirdpartyid, 1, '', 10, 'withproject='.$withproject);
+		$formactions->showactions($object, 'project_task', 0, 1, '', 10, 'withproject='.$withproject);
 
 		print '</div></div>';
 	}

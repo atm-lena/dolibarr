@@ -46,6 +46,9 @@ $action = GETPOST('action', 'aZ09');
 $confirm = GETPOST('confirm', 'alpha');
 $cancel = GETPOST('cancel', 'alpha');
 
+$sortfield = '';
+$sortorder = '';
+
 $module = GETPOST('module', 'alpha');
 $tab = GETPOST('tab', 'aZ09');
 $tabobj = GETPOST('tabobj', 'alpha');
@@ -1356,6 +1359,8 @@ if ($dirins && $action == 'addproperty' && empty($cancel) && !empty($module) && 
 				$addfieldentry['arrayofkeyval'] = json_decode($addfieldentry['arrayofkeyval'], true);
 			}
 		}
+	} else {
+		$addfieldentry = array();
 	}
 
 	/*if (GETPOST('regeneratemissing'))
@@ -3250,7 +3255,7 @@ if ($module == 'initmodule') {
 						print '</td>';
 
 						print '<td>';
-						print $perm[1];
+						print $langs->trans($perm[1]);
 						print '</td>';
 
 						print '<td>';

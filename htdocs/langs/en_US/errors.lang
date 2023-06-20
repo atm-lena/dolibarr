@@ -267,7 +267,7 @@ ErrorYouMustFirstSetupYourChartOfAccount=You must first setup your chart of acco
 ErrorFailedToFindEmailTemplate=Failed to find template with code name %s
 ErrorDurationForServiceNotDefinedCantCalculateHourlyPrice=Duration not defined on service. No way to calculate the hourly price.
 ErrorActionCommPropertyUserowneridNotDefined=User's owner is required
-ErrorActionCommBadType=Selected event type (id: %n, code: %s) do not exist in Event Type dictionary
+ErrorActionCommBadType=Selected event type (id: %s, code: %s) do not exist in Event Type dictionary
 CheckVersionFail=Version check fail
 ErrorWrongFileName=Name of the file cannot have __SOMETHING__ in it
 ErrorNotInDictionaryPaymentConditions=Not in Payment Terms Dictionary, please modify.
@@ -275,6 +275,9 @@ ErrorIsNotADraft=%s is not a draft
 ErrorExecIdFailed=Can't execute command "id"
 ErrorBadCharIntoLoginName=Unauthorized character in the login name
 ErrorNotApproverForHoliday=You are not the approver for leave %s 
+ErrorInvoiceLoadThirdParty=Can't load third-party object for invoice "%s"
+ErrorInvoiceLoadThirdPartyKey=Third-party key "%s" no set for invoice "%s"
+ErrorDeleteLineNotAllowedByObjectStatus=Delete line is not allowed by actual object status
 
 # Warnings
 WarningParamUploadMaxFileSizeHigherThanPostMaxSize=Your PHP parameter upload_max_filesize (%s) is higher than PHP parameter post_max_size (%s). This is not a consistent setup.

@@ -302,7 +302,7 @@ $sql .= " p.rowid as project_id, p.ref as project_ref,";
 if (empty($user->rights->societe->client->voir) && !$socid) {
 	$sql .= " sc.fk_soc, sc.fk_user,";
 }
-$sql .= " u.firstname, u.lastname, u.photo, u.login, u.statut as status, u.admin, u.employee, u.email as uemail";
+$sql .= " u.firstname, u.lastname, u.photo, u.login, u.statut as ustatus, u.admin, u.employee, u.email as uemail";
 // Add fields from extrafields
 if (!empty($extrafields->attributes[$object->table_element]['label'])) {
 	foreach ($extrafields->attributes[$object->table_element]['label'] as $key => $val) {
@@ -367,7 +367,7 @@ if ($search_login) {
 	$sql .= natural_search(array('u.lastname', 'u.firstname', 'u.login'), $search_login);
 }
 if ($search_montant_ht) {
-	$sql .= natural_search('sp.total_ht=', $search_montant_ht, 1);
+	$sql .= natural_search('sp.total_ht', $search_montant_ht, 1);
 }
 if ($search_montant_vat != '') {
 	$sql .= natural_search("sp.total_tva", $search_montant_vat, 1);

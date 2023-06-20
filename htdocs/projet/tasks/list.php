@@ -322,7 +322,7 @@ $sql .= " t.rowid as id, t.ref, t.label, t.planned_workload, t.duration_effectiv
 $sql .= " t.description, t.fk_task_parent";
 $sql .= " ,t.budget_amount";
 // We'll need these fields in order to filter by categ
-if ($search_categ) {
+if ($search_categ > 0) {
 	$sql .= ", cs.fk_categorie, cs.fk_project";
 }
 // Add sum fields
@@ -342,7 +342,7 @@ $sql .= $hookmanager->resPrint;
 $sql .= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on p.fk_soc = s.rowid";
 // We'll need this table joined to the select in order to filter by categ
-if (!empty($search_categ)) {
+if ($search_categ > 0) {
 	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_project as cs ON p.rowid = cs.fk_project"; // We'll need this table joined to the select in order to filter by categ
 }
 $sql .= ", ".MAIN_DB_PREFIX."projet_task as t";
@@ -988,7 +988,7 @@ while ($i < min($num, $limit)) {
 		// Description
 		if (!empty($arrayfields['t.description']['checked'])) {
 			print '<td>';
-			print dol_escape_htmltag($object->description);
+			print dolGetFirstLineOfText($object->description, 5);
 			print '</td>';
 			if (!$i) {
 				$totalarray['nbfield']++;

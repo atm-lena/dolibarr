@@ -274,6 +274,7 @@ if ($modecompta == 'CREANCES-DETTES') {
 } elseif ($modecompta == "BOOKKEEPING") {
 	// Get array of all report groups that are active
 	$cats = $AccCat->getCats(); // WARNING: Computed groups must be after group they include
+	$unactive_cats = $AccCat->getCats(-1, 0);
 
 	/*
 	$sql = 'SELECT DISTINCT t.numero_compte as nb FROM '.MAIN_DB_PREFIX.'accounting_bookkeeping as t, '.MAIN_DB_PREFIX.'accounting_account as aa';
@@ -325,8 +326,16 @@ if ($modecompta == 'CREANCES-DETTES') {
 
 				$vars = array();
 
+				// Unactive categories have a total of 0 to be used in the formula.
+				foreach ($unactive_cats as $un_cat) {
+					$vars[$un_cat['code']] = 0;
+				}
+
 				// Previous Fiscal year (N-1)
 				foreach ($sommes as $code => $det) {
+					if (is_null($det['NP'])) {
+						$det['NP'] = 0;
+					}
 					$vars[$code] = $det['NP'];
 				}
 
@@ -334,8 +343,11 @@ if ($modecompta == 'CREANCES-DETTES') {
 
 				//var_dump($result);
 				//$r = $AccCat->calculate($result);
+
 				$r = dol_eval($result, 1, 1, '1');
-				//var_dump($r);
+				if (is_nan($r)) {
+					$r = 0;
+				}
 
 				print '<td class="liste_total right"><span class="amount">'.price($r).'</span></td>';
 
@@ -354,6 +366,9 @@ if ($modecompta == 'CREANCES-DETTES') {
 
 				//$r = $AccCat->calculate($result);
 				$r = dol_eval($result, 1, 1, 1);
+				if (is_nan($r)) {
+					$r = 0;
+				}
 
 				print '<td class="liste_total right"><span class="amount">'.price($r).'</span></td>';
 				$sommes[$code]['N'] += $r;
@@ -368,6 +383,9 @@ if ($modecompta == 'CREANCES-DETTES') {
 
 						//$r = $AccCat->calculate($result);
 						$r = dol_eval($result, 1, 1, 1);
+						if (is_nan($r)) {
+							$r = 0;
+						}
 
 						print '<td class="liste_total right"><span class="amount">'.price($r).'</span></td>';
 						$sommes[$code]['M'][$k] += $r;
@@ -382,6 +400,9 @@ if ($modecompta == 'CREANCES-DETTES') {
 
 						//$r = $AccCat->calculate($result);
 						$r = dol_eval($result, 1, 1, 1);
+						if (is_nan($r)) {
+							$r = 0;
+						}
 
 						print '<td class="liste_total right"><span class="amount">'.price($r).'</span></td>';
 						$sommes[$code]['M'][$k] += $r;
@@ -405,10 +426,15 @@ if ($modecompta == 'CREANCES-DETTES') {
 
 				// Set $cpts with array of accounts in the category/group
 				$cpts = $AccCat->getCptsCat($cat['rowid']);
+				// We should loop over empty $cpts array, else the category _code_ is used in the formula, which leads to wrong result if the code is a number.
+				if (empty($cpts)) $cpts[] = array();
+
 
 				$arrayofaccountforfilter = array();
-				foreach ($cpts as $i => $cpt) {    // Loop on each account.
-					$arrayofaccountforfilter[] = $cpt['account_number'];
+				foreach ($cpts as $i => $cpt) {// Loop on each account.
+					if (!empty($cpt['account_number'])) {
+						$arrayofaccountforfilter[] = $cpt['account_number'];
+					}
 				}
 
 				// N-1
@@ -477,7 +503,7 @@ if ($modecompta == 'CREANCES-DETTES') {
 				// Label of group
 				print '<td>';
 				print dol_escape_htmltag($cat['label']);
-				if (count($cpts) > 0) {    // Show example of 5 first accounting accounts
+				if (count($cpts) > 0 && !empty($cpts[0])) {    // Show example of 5 first accounting accounts
 					$i = 0;
 					foreach ($cpts as $cpt) {
 						if ($i > 5) {

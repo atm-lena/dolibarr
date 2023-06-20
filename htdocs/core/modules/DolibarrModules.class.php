@@ -826,7 +826,9 @@ class DolibarrModules // Can not be abstract, because we need to instantiate it 
 	}
 
 	/**
-	 * Tells if module is core or external
+	 * Tells if module is core or external.
+	 * 'dolibarr' and 'dolibarr_deprecated' is core
+	 * 'experimental' and 'development' is core
 	 *
 	 * @return string  'core', 'external' or 'unknown'
 	 */
@@ -1427,6 +1429,9 @@ class DolibarrModules // Can not be abstract, because we need to instantiate it 
 				}
 				if ($command) {
 					$sql .= " AND command = '".$this->db->escape($command)."'";
+				}
+				if ($parameters) {
+					$sql .= " AND params = '".$this->db->escape($parameters)."'";
 				}
 				$sql .= " AND entity = ".((int) $entity); // Must be exact entity
 
