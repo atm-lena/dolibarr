@@ -1,1 +1,2 @@
+- FIX : DA023477 - Liens hypertext ne fonctionnent pas [Ce dev a été ajouté au standard en develop (pour V19), ainsi, il sera à supprimer lors de la MDV] - v17 - *18/07/2023*
 - NEW : objets referents sur les lots, le dev a également été PR et accepté en develop - v17 - *20/02/2023*
