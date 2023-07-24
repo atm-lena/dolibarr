@@ -93,8 +93,21 @@ class Productlot extends CommonObject
 		'entity'        => array('type'=>'integer', 'label'=>'Entity', 'enabled'=>1, 'visible'=>0, 'default'=>1, 'notnull'=>1, 'index'=>1, 'position'=>20),
 		'sellby'        => array('type'=>'date', 'label'=>'SellByDate', 'enabled'=>'empty($conf->global->PRODUCT_DISABLE_SELLBY)?1:0', 'visible'=>5, 'position'=>60),
 		'eol_date'        => array('type'=>'date', 'label'=>'EndOfLife', 'enabled'=>'empty($conf->global->PRODUCT_ENABLE_TRACEABILITY)?0:1', 'visible'=>5, 'position'=>70),
-		'manufacturing_date' => array('type'=>'date', 'label'=>'ManufacturingDate', 'enabled'=>'empty($conf->global->PRODUCT_ENABLE_TRACEABILITY)?0:1', 'visible'=>5, 'position'=>80),
-		'scrapping_date'     => array('type'=>'date', 'label'=>'DestructionDate', 'enabled'=>'empty($conf->global->PRODUCT_ENABLE_TRACEABILITY)?0:1', 'visible'=>5, 'position'=>90),
+
+        /*
+         * SPECIFIQUE TECHPAP
+         *
+         * DA023477 : Date de création pour les lot/numéro de série
+         * Ce dev a été ajouté en standard en develop (pour la v19)
+         * Ainsi, il sera à supprimer lors de la montée de version
+        */
+        //'manufacturing_date' => array('type'=>'date', 'label'=>'ManufacturingDate', 'enabled'=>'empty($conf->global->PRODUCT_ENABLE_TRACEABILITY)?0:1', 'visible'=>5, 'position'=>80),
+        'manufacturing_date' => array('type'=>'date', 'label'=>'ManufacturingDate', 'enabled'=>1, 'visible'=>1, 'position'=>80),
+        /*
+         * FIN SPECIFIQUE TECHPAP
+         */
+
+        'scrapping_date'     => array('type'=>'date', 'label'=>'DestructionDate', 'enabled'=>'empty($conf->global->PRODUCT_ENABLE_TRACEABILITY)?0:1', 'visible'=>5, 'position'=>90),
 		//'commissionning_date'        => array('type'=>'date', 'label'=>'FirstUseDate', 'enabled'=>'empty($conf->global->PRODUCT_ENABLE_TRACEABILITY)?0:1', 'visible'=>5, 'position'=>100),
 		//'qc_frequency'        => array('type'=>'varchar(6)', 'label'=>'QCFrequency', 'enabled'=>'empty($conf->global->PRODUCT_ENABLE_QUALITYCONTROL)?1:0', 'visible'=>5, 'position'=>110),
 		'eatby'         => array('type'=>'date', 'label'=>'EatByDate', 'enabled'=>'empty($conf->global->PRODUCT_DISABLE_EATBY)?1:0', 'visible'=>5, 'position'=>62),
