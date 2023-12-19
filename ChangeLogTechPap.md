@@ -1,3 +1,4 @@
+- FIX : DA024269 - Multilangs ne fonctionne pas avec les pdfs propal et facture [Ce dev devrait être ajouté au standard en v17, ainsi, il sera à supprimer lors de la MDV : PR 27159] - *19/12/2023*
 - FIX : DA023477 - Liens hypertext ne fonctionnent pas [Ce dev a été ajouté au standard en develop (pour V19), ainsi, il sera à supprimer lors de la MDV] - v17 - *18/07/2023*
 - FIX : DA023556 - Date de création non-fonctionnelle pour les numéros de lot/série [Ce dev a été ajouté au standard en develop (pour V19), ainsi, il sera à supprimer lors de la MDV] - v17 - *18/07/2023*
 - NEW : objets referents sur les lots, le dev a également été PR et accepté en develop - v17 - *20/02/2023*
