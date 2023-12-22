@@ -1680,7 +1680,9 @@ class Propal extends CommonObject
 				$this->lines = array();
 
 				// Lines
-				$result = $this->fetch_lines();
+				/** REPORT STANDARD PR 27159 **/
+				$result = $this->fetch_lines(0, (getDolGlobalInt('MAIN_MULTILANGS') ? 1 : 0));
+				/** REPORT STANDARD PR 27159 **/
 				if ($result < 0) {
 					return -3;
 				}
