@@ -196,7 +196,8 @@ class PaiementFourn extends Paiement
 			// Add controls of input validity
 			if ($value_converted === false) {
 				// We failed to find the conversion for one invoice
-				$this->error = 'FailedToFoundTheConversionRateForInvoice';
+                //spé koesio : backport pr standard
+                $this->error = $langs->trans('FailedToFoundTheConversionRateForInvoice');
 				return -1;
 			}
 			if (empty($currencyofpayment)) {
