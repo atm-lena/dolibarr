@@ -850,7 +850,8 @@ if (empty($reshook)) {
 
 		// If check ok and action add, add the line
 		if ($ok && GETPOST('actionadd')) {
-			if ($tabrowid[$id]) {
+			/* Ajout de la condition en attente du merge d'une PR pour le ticket DA024379 */
+			if ($tabrowid[$id] && $tablename != 'c_prospectlevel') {
 				// Get free id for insert
 				$newid = 0;
 				$sql = "SELECT MAX(".$tabrowid[$id].") as newid FROM ".MAIN_DB_PREFIX.$tablename;
