@@ -1405,6 +1405,8 @@ function pdf_getlinedesc($object, $i, $outputlangs, $hideref = 0, $hidedesc = 0,
 {
 	global $db, $conf, $langs;
 
+
+	/* BEGIN BACKPORT DOLIBARR : DA024272*/
 	$multilangsactive = getDolGlobalInt('MAIN_MULTILANGS');
 
 	if ($issupplierline) {
@@ -1463,6 +1465,7 @@ function pdf_getlinedesc($object, $i, $outputlangs, $hideref = 0, $hidedesc = 0,
 	$note = (!empty($object->lines[$i]->note) ? $object->lines[$i]->note : '');
 	//dbatch
 	$dbatch = (!empty($object->lines[$i]->detail_batch) ? $object->lines[$i]->detail_batch : false);
+	/* END BACKPORT DOLIBARR : DA024272*/
 
 	if ($idprod) {
 		// If a predefined product and multilang and on other lang, we renamed label with label translated
