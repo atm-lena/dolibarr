@@ -2075,7 +2075,7 @@ class Facture extends CommonInvoice
 				$this->lines = array();
 
 				/** REPORT STANDARD PR 27159 **/
-				$result = $this->fetch_lines(0, (getDolGlobalInt('MAIN_MULTILANGS') ? 1 : 0));
+				$result = $this->fetch_lines(0);
 				/** REPORT STANDARD PR 27159 **/
 				if ($result < 0) {
 					$this->error = $this->db->error();
