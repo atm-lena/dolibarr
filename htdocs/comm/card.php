@@ -642,7 +642,10 @@ if ($object->id > 0) {
 	print "</table>";
 
 	// Prospection level and status
-	if ($object->client == 2 || $object->client == 3) {
+	/* SPE CLIENT */
+	if ($object->client == 2 || $object->client == 3 || $object->client == 1) {
+	/* SPE CLIENT */
+
 		print '<br>';
 
 		print '<div class="underbanner clearboth"></div>';
