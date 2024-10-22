@@ -63,7 +63,7 @@ class Documentation
 		'Badges' => array('url' => dol_buildpath('documentation/ux/badges.php', 1), 'icon' => 'fas fa-certificate pictofixedwidth','submenu' => array()),
 		'Progress' => array('url' => dol_buildpath('documentation/ux/progress-bars.php', 1), 'icon' => 'fas fa-battery-half pictofixedwidth','submenu' => array()),
 		'Buttons' => array('url' => dol_buildpath('documentation/ux/buttons.php', 1), 'icon' => 'fas fa-mouse pictofixedwidth','submenu' => array()),
-		'SetEventMessage' => array('url' => dol_buildpath('documentation/ux/seteventmessages.php', 1), 'icon' => 'fas fa-comments pictofixedwidth','submenu' => array()),
+		'Event Message' => array('url' => dol_buildpath('documentation/ux/seteventmessages.php', 1), 'icon' => 'fas fa-comments pictofixedwidth','submenu' => array()),
 		)),
 		);
 	}

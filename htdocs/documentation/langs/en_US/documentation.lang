@@ -43,8 +43,8 @@ DocOtherVariants = Other
 DocOtherVariantsDesc =
 
 # Set Event Message
-DocSetEventMessageTitle = Set Event Message
-DocSetEventMessageMainDescription = Documentation and examples for set event message
+DocSetEventMessageTitle = Event Message
+DocSetEventMessageMainDescription = Documentation and examples for event message
 DocSetEventMessageContextualVariationsDescription = Fill the parameter "style" of function to change color of event message
 DocSetEventMessageContextualVariations = Contextual variations
 DocSetEventMessageDescription = Display one message or several messages
