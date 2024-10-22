@@ -36,16 +36,18 @@ $langs->load('documentation@documentation');
 $action = GETPOST('action', 'alpha');
 
 if ($action == 'displayeventmessage') {
-	setEventMessages('Unique message', null);
+	setEventMessages($langs->trans('DocSetEventMessageUnique'), null);
 } elseif ($action == 'displayeventmessages') {
-	$messageArray = ['Message #1', 'Message #2', 'Message #3', 'Message #4'];
+	$messageArray = [$langs->trans('DocSetEventMessage', '1'),
+					$langs->trans('DocSetEventMessage', '2'),
+					$langs->trans('DocSetEventMessage', '3')];
 	setEventMessages(null, $messageArray);
 } elseif ($action == 'displayeventmessageok') {
-	setEventMessages('Message OK', null);
+	setEventMessages($langs->trans('DocSetEventMessageOK'), null);
 } elseif ($action == 'displayeventmessagewarning') {
-	setEventMessages('Message Warning', null, 'warnings');
+	setEventMessages($langs->trans('DocSetEventMessageWarning'), null, 'warnings');
 } elseif ($action == 'displayeventmessageerror') {
-	setEventMessages('Message Error', null, 'errors');
+	setEventMessages($langs->trans('DocSetEventMessageError'), null, 'errors');
 }
 
 //
