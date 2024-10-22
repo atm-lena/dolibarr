@@ -98,18 +98,16 @@ $documentation->showSidebar(); ?>
 
 					$html = '<span class="fa fa-comment paddingright"></span>'.$langs->trans('DocSetEventMessageDisplayMessage');
 					$action_type = 'displayeventmessage';
-					$id = 'button-id-1';
 					$url = $_SERVER["PHP_SELF"].'?action=displayeventmessage';
-					print dolGetButtonAction($label, $html, $action_type, $url, $id, $user_right);
+					print dolGetButtonAction($label, $html, $action_type, $url, '', $user_right);
 
 					$label = 'My action label used for accessibility visually for impaired people';
 					$user_right = 1;
 
 					$html = '<span class="fa fa-comments paddingright"></span>'.$langs->trans('DocSetEventMessageDisplayMessages');;
 					$action_type = 'displayeventmessages';
-					$id = 'button-id-2';
 					$url = $_SERVER["PHP_SELF"].'?action=displayeventmessages';
-					print dolGetButtonAction($label, $html, $action_type, $url, $id, $user_right); ?>
+					print dolGetButtonAction($label, $html, $action_type, $url, '', $user_right); ?>
 			</div>
 			<?php
 			$lines = array(
@@ -145,28 +143,25 @@ $documentation->showSidebar(); ?>
 				$user_right = 1;
 				$html = '<span class="fa fa-comment paddingright"></span>'.$langs->trans('DocSetEventMessageDisplayOKMessage');;
 				$action_type = 'displayeventmessageok';
-				$id = 'button-id-1';
 				$url = $_SERVER["PHP_SELF"].'?action=displayeventmessageok#seteventmessagesection-contextvariations';
 				$params['attr']['style'] = 'background: #446548';
-				print dolGetButtonAction('', $html, $action_type, $url, $id, $user_right, $params);
+				print dolGetButtonAction('', $html, $action_type, $url, '', $user_right, $params);
 
 				$label = 'My action label used for accessibility visually for impaired people';
 				$user_right = 1;
 				$html = '<span class="fa fa-comment paddingright"></span>'.$langs->trans('DocSetEventMessageDisplayWarningMessage');;
 				$action_type = 'displayeventmessagewarning';
-				$id = 'button-id-2';
 				$url = $_SERVER["PHP_SELF"].'?action=displayeventmessagewarning#seteventmessagesection-contextvariations';
 				$params['attr']['style'] = 'background: #a28918';
-				print dolGetButtonAction($label, $html, $action_type, $url, $id, $user_right, $params);
+				print dolGetButtonAction($label, $html, $action_type, $url, '', $user_right, $params);
 
 				$label = 'My action label used for accessibility visually for impaired people';
 				$user_right = 1;
 				$html = '<span class="fa fa-comment paddingright"></span>'.$langs->trans('DocSetEventMessageDisplayErrorMessage');;
 				$action_type = 'displayeventmessageerror';
-				$id = 'button-id-2';
 				$url = $_SERVER["PHP_SELF"].'?action=displayeventmessageerror#seteventmessagesection-contextvariations';
 				$params['attr']['style'] = 'background: #a72947';
-				print dolGetButtonAction($label, $html, $action_type, $url, $id, $user_right, $params); ?>
+				print dolGetButtonAction($label, $html, $action_type, $url, '', $user_right, $params); ?>
 			</div>
 			<?php
 			$lines = array(
