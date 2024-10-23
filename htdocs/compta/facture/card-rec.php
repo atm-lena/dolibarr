@@ -325,7 +325,12 @@ if (empty($reshook)) {
 	} elseif ($action == 'setmode' && $usercancreate) {
 		// Set mode
 		$object->context['actionmsg'] = $langs->trans("FieldXModified", $langs->transnoentitiesnoconv("PaymentMode"));
-		$result = $object->setPaymentMethods(GETPOSTINT('mode_reglement_id'));
+		$object->setPaymentMethods(GETPOSTINT('mode_reglement_id'));
+		$object->setValueFrom('fk_societe_rib', 0);
+
+		//Need to reload to display bank customer account field
+		header("Location: ".$_SERVER['PHP_SELF'].'?facid='.$object->id);
+		exit;
 	} elseif ($action == 'classin' && $usercancreate) {
 		// Set project
 		$object->context['actionmsg'] = $langs->trans("FieldXModified", $langs->transnoentitiesnoconv("Project"));
@@ -353,7 +358,8 @@ if (empty($reshook)) {
 	} elseif ($action == 'setbankaccountcustomer' && $usercancreate) {
 		// Set bank account customer
 		$object->context['actionmsg'] = $langs->trans("FieldXModified", $langs->transnoentitiesnoconv("BankCustomer"));
-		$result = $object->setValueFrom('fk_societe_rib', GETPOSTINT('fk_societe_rib'));
+		$fk_societe_rib = (GETPOSTINT('fk_societe_rib') != "-1") ? GETPOSTINT('fk_societe_rib') : 0;
+		$result = $object->setValueFrom('fk_societe_rib', $fk_societe_rib);
 	} elseif ($action == 'setfrequency' && $usercancreate) {
 		// Set frequency and unit frequency
 		$object->context['actionmsg'] = $langs->trans("FieldXModified", $langs->transnoentitiesnoconv("Frequency"));
@@ -1106,8 +1112,8 @@ if ($action == 'create') {
 
 		// Customer Bank Account
 		if ($changepaymentmode == "PRE") {
-			print "<tr><td>".$langs->trans('BankAccountClient')."</td><td>";
-			$form->selectComptesCustomer($_SERVER['PHP_SELF'].'?id='.$object->id, 'fk_societe_rib');
+			print "<tr><td>".$langs->trans('BankAccountCustomer')."</td><td>";
+			$form->selectComptesCustomer($_SERVER['PHP_SELF'].'?id='.$object->id, 'fk_societe_rib', '', 1);
 			print "</td></tr>";
 		}
 
@@ -1457,23 +1463,25 @@ if ($action == 'create') {
 		$htmltext .= '</i>';
 
 		// Bank Account Customer
-		print '<tr><td class="nowrap">';
-		print '<table width="100%" class="nobordernopadding"><tr><td class="nowrap">';
-		print $langs->trans('BankAccountCustomer');
-		print '<td>';
+		if ($object->mode_reglement_code == "PRE") {
+			print '<tr><td class="nowrap">';
+			print '<table width="100%" class="nobordernopadding"><tr><td class="nowrap">';
+			print $langs->trans('BankAccountCustomer');
+			print '<td>';
 
-		if (($action != 'editbankaccountcustomer') && $user->hasRight('facture', 'creer') && $object->statut == FactureRec::STATUS_DRAFT) {
-			print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editbankaccountcustomer&token='.newToken().'&id='.$object->id.'">'.img_edit($langs->trans('SetBankAccountCustomer'), 1).'</a></td>';
+			if (($action != 'editbankaccountcustomer') && $user->hasRight('facture', 'creer') && $object->statut == FactureRec::STATUS_DRAFT) {
+				print '<td class="right"><a class="editfielda" href="' . $_SERVER["PHP_SELF"] . '?action=editbankaccountcustomer&token=' . newToken() . '&id=' . $object->id . '">' . img_edit($langs->trans('SetBankAccountCustomer'), 1) . '</a></td>';
+			}
+			print '</tr></table>';
+			print '</td><td>';
+			if ($action == 'editbankaccountcustomer') {
+				$form->formSelectAccountCustomer($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->fk_societe_rib, 'fk_societe_rib', 1);
+			} else {
+				$form->formSelectAccountCustomer($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->fk_societe_rib, 'none');
+			}
+			print "</td>";
+			print '</tr>';
 		}
-		print '</tr></table>';
-		print '</td><td>';
-		if ($action == 'editbankaccountcustomer') {
-			$form->formSelectAccountCustomer($_SERVER['PHP_SELF'].'?id='.$object->id, $object->fk_societe_rib, 'fk_societe_rib', 1);
-		} else {
-			$form->formSelectAccountCustomer($_SERVER['PHP_SELF'].'?id='.$object->id, $object->fk_societe_rib, 'none');
-		}
-		print "</td>";
-		print '</tr>';
 
 		// Bank Account
 		print '<tr><td class="nowrap">';

@@ -5231,7 +5231,6 @@ class Form
 			$sql .= " AND " . $filtre;
 		}
 		$sql .= " ORDER BY label";
-
 		dol_syslog(get_class($this) . "::select_comptes", LOG_DEBUG);
 		$result = $this->db->query($sql);
 		if ($result) {
@@ -5404,8 +5403,7 @@ class Form
 			print '<form method="POST" action="' . $page . '">';
 			print '<input type="hidden" name="action" value="setbankaccountcustomer">';
 			print '<input type="hidden" name="token" value="' . newToken() . '">';
-			print img_picto('', 'bank_account', 'class="pictofixedwidth"');
-			$nbaccountfound = $this->selectComptesCustomer($selected, $htmlname, 0, '', $addempty);
+			$nbaccountfound = $this->selectComptesCustomer($selected, $htmlname, '', $addempty);
 			if ($nbaccountfound > 0) {
 				print '<input type="submit" class="button smallpaddingimp valignmiddle" value="' . $langs->trans("Modify") . '">';
 			}
@@ -5418,7 +5416,7 @@ class Form
 				$bankstatic = new CompanyBankAccount($this->db);
 				$result = $bankstatic->fetch($selected);
 				if ($result) {
-					print $bankstatic->getNomUrl(1);
+					print $bankstatic->label;
 				}
 			} else {
 				print "&nbsp;";
