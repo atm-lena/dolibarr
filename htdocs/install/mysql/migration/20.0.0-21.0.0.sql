@@ -280,3 +280,5 @@ CREATE TABLE llx_product_customer_price_extrafields (
 ) ENGINE=innodb;
 
 ALTER TABLE llx_product_customer_price_extrafields ADD UNIQUE INDEX uk_product_customer_price_extrafields (fk_object);
+
+ALTER TABLE llx_facture_rec ADD COLUMN fk_societe_rib integer DEFAULT NULL;
