@@ -131,8 +131,6 @@ $usercancreatemargin = $user->hasRight("margins", "creer");
 $usercanreadallmargin = $user->hasRight("margins", "liretous");
 $usercancreatewithdrarequest = $user->hasRight("prelevement", "bons", "creer");
 
-$changepaymentmode = GETPOST('changepaymentmode', 'alphanohtml');
-
 $now = dol_now();
 
 $error = 0;
@@ -241,7 +239,7 @@ if (empty($reshook)) {
 
 			$object->mode_reglement_id     = GETPOSTINT('mode_reglement_id');
 			$object->cond_reglement_id     = GETPOSTINT('cond_reglement_id');
-			$object->fk_societe_rib 	   = GETPOSTINT('fk_societe_rib');
+			$object->fk_societe_rib 	   = GETPOSTINT('accountcustomerid');
 
 			$object->frequency             = $frequency;
 			$object->unit_frequency        = GETPOST('unit_frequency', 'alpha');
@@ -358,7 +356,7 @@ if (empty($reshook)) {
 	} elseif ($action == 'setbankaccountcustomer' && $usercancreate) {
 		// Set bank account customer
 		$object->context['actionmsg'] = $langs->trans("FieldXModified", $langs->transnoentitiesnoconv("BankCustomer"));
-		$fk_societe_rib = (GETPOSTINT('fk_societe_rib') != "-1") ? GETPOSTINT('fk_societe_rib') : 0;
+		$fk_societe_rib = (GETPOSTINT('accountcustomerid') != "-1") ? GETPOSTINT('accountcustomerid') : 0;
 		$result = $object->setValueFrom('fk_societe_rib', $fk_societe_rib);
 	} elseif ($action == 'setfrequency' && $usercancreate) {
 		// Set frequency and unit frequency
@@ -1013,16 +1011,16 @@ if ($action == 'create') {
 	print load_fiche_titre($langs->trans("CreateRepeatableInvoice"), '', 'bill');
 
 	$object = new Facture($db); // Source invoice
+	$factureRec = new FactureRec($db);
 	$product_static = new Product($db);
 
 	if ($object->fetch($id, $ref) > 0) {
 		$result = $object->getLinesArray();
 
-		print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" id="formtocreate" name="formtocreate">';
+		print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 		print '<input type="hidden" name="token" value="'.newToken().'">';
-		print '<input type="hidden" name="action" id="formtocreateaction" value="add">';
+		print '<input type="hidden" name="action"  value="add">';
 		print '<input type="hidden" name="facid" value="'.$object->id.'">';
-		print '<input type="hidden" name="changepaymentmode" value="">';	// will be set to code by javascript so we know post is done after a payment change
 
 
 		print dol_get_fiche_head([], '', '', 0);
@@ -1098,24 +1096,36 @@ if ($action == 'create') {
 		//$form->form_modes_reglement($_SERVER['PHP_SELF'].'?id='.$object->id, $object->mode_reglement_id, 'mode_reglement_id', '', 1);
 		print "</td></tr>";
 
+		// Customer Bank Account
+		print "<tr><td>".$langs->trans('BankAccountCustomer')."</td><td>";
+		$form->selectComptesCustomer(GETPOSTISSET('accountcustomerid') ? GETPOSTINT('accountcustomerid') : $object->fk_societe_rib, 'accountcustomerid', '', 1);
+		print "</td></tr>";
+
 		print '<script>
 				$(document).ready(function() {
+                    if($("#selectmode_reglement_id option:selected").data("code") != "' . $factureRec::PAYMENTCODETOEDITSOCIETERIB . '") {
+                      hideselectfksocieterib();
+                    }
 					$("#selectmode_reglement_id").change(function() {
-							// For payment mode change, we must submit page with action=create instead of action=add
-							console.log("We have changed the payment mode - Resubmit page");
-							jQuery("#formtocreateaction").val("create");
-                            jQuery("input[name=changepaymentmode]").val($("#selectmode_reglement_id option:selected").data("code"));
-							jQuery("#formtocreate").submit();
+                        if($("#selectmode_reglement_id option:selected").data("code") != "'. $factureRec::PAYMENTCODETOEDITSOCIETERIB .'") {
+                       	 	hideselectfksocieterib(1);
+                        } else {
+                            showselectfksocieterib();
+                        }
 					});
 				});
-				</script>';
 
-		// Customer Bank Account
-		if ($changepaymentmode == "PRE") {
-			print "<tr><td>".$langs->trans('BankAccountCustomer')."</td><td>";
-			$form->selectComptesCustomer($_SERVER['PHP_SELF'].'?id='.$object->id, 'fk_societe_rib', '', 1);
-			print "</td></tr>";
-		}
+                function hideselectfksocieterib(empty = 0){
+                     $("#selectaccountcustomerid").closest("tr").hide();
+                     if(empty == 1){
+                       $("#selectaccountcustomerid").val("-1").change();
+                     }
+                }
+
+                function showselectfksocieterib(){
+                  $("#selectaccountcustomerid").closest("tr").show();
+                }
+				</script>';
 
 		// Bank account
 		if ($object->fk_account > 0) {
@@ -1463,7 +1473,7 @@ if ($action == 'create') {
 		$htmltext .= '</i>';
 
 		// Bank Account Customer
-		if ($object->mode_reglement_code == "PRE") {
+		if ($object->mode_reglement_code == $object::PAYMENTCODETOEDITSOCIETERIB) {
 			print '<tr><td class="nowrap">';
 			print '<table width="100%" class="nobordernopadding"><tr><td class="nowrap">';
 			print $langs->trans('BankAccountCustomer');
