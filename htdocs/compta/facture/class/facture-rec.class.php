@@ -198,6 +198,10 @@ class FactureRec extends CommonInvoice
 	 */
 	public $generate_pdf; // 1 to generate PDF on invoice generation (default)
 
+	/**
+	 * @var int
+	 */
+	public $fk_societe_rib;
 
 	/**
 	 *  'type' if the field format ('integer', 'integer:ObjectClass:PathToClass[:AddCreateButtonOrNot[:Filter]]', 'varchar(x)', 'double(24,8)', 'real', 'price', 'text', 'html', 'date', 'datetime', 'timestamp', 'duration', 'mail', 'phone', 'url', 'password')
@@ -359,6 +363,7 @@ class FactureRec extends CommonInvoice
 			$sql .= ", multicurrency_code";
 			$sql .= ", multicurrency_tx";
 			$sql .= ", suspended";
+			$sql .= ", fk_societe_rib";
 			$sql .= ") VALUES (";
 			$sql .= "'".$this->db->escape($this->titre ? $this->titre : $this->title)."'";
 			$sql .= ", ".((int) $this->socid);
@@ -388,6 +393,7 @@ class FactureRec extends CommonInvoice
 			$sql .= ", '".$this->db->escape($facsrc->multicurrency_code)."'";
 			$sql .= ", ".((float) $facsrc->multicurrency_tx);
 			$sql .= ", ".((int) $this->suspended);
+			$sql .= ", ".((int) $this->fk_societe_rib);
 			$sql .= ")";
 
 			if ($this->db->query($sql)) {
@@ -560,6 +566,7 @@ class FactureRec extends CommonInvoice
 		$sql .= " localtax2 = ".((float) $this->total_localtax2).",";
 		$sql .= " total_ht = ".((float) $this->total_ht).",";
 		$sql .= " total_ttc = ".((float) $this->total_ttc);
+		$sql .= " fk_societe_rib = ".((int) $this->fk_societe_rib);
 		// TODO Add missing fields
 		$sql .= " WHERE rowid = ".((int) $this->id);
 
