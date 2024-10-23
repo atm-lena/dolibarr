@@ -131,6 +131,8 @@ $usercancreatemargin = $user->hasRight("margins", "creer");
 $usercanreadallmargin = $user->hasRight("margins", "liretous");
 $usercancreatewithdrarequest = $user->hasRight("prelevement", "bons", "creer");
 
+$changepaymentmode = GETPOST('changepaymentmode', 'alphanohtml');
+
 $now = dol_now();
 
 $error = 0;
@@ -239,6 +241,7 @@ if (empty($reshook)) {
 
 			$object->mode_reglement_id     = GETPOSTINT('mode_reglement_id');
 			$object->cond_reglement_id     = GETPOSTINT('cond_reglement_id');
+			$object->fk_societe_rib 	   = GETPOSTINT('fk_societe_rib');
 
 			$object->frequency             = $frequency;
 			$object->unit_frequency        = GETPOST('unit_frequency', 'alpha');
@@ -347,6 +350,10 @@ if (empty($reshook)) {
 		// Set bank account
 		$object->context['actionmsg'] = $langs->trans("FieldXModified", $langs->transnoentitiesnoconv("Bank"));
 		$result = $object->setBankAccount(GETPOSTINT('fk_account'));
+	} elseif ($action == 'setbankaccountcustomer' && $usercancreate) {
+		// Set bank account customer
+		$object->context['actionmsg'] = $langs->trans("FieldXModified", $langs->transnoentitiesnoconv("BankCustomer"));
+		$result = $object->setValueFrom('fk_societe_rib', GETPOSTINT('fk_societe_rib'));
 	} elseif ($action == 'setfrequency' && $usercancreate) {
 		// Set frequency and unit frequency
 		$object->context['actionmsg'] = $langs->trans("FieldXModified", $langs->transnoentitiesnoconv("Frequency"));
@@ -1005,10 +1012,12 @@ if ($action == 'create') {
 	if ($object->fetch($id, $ref) > 0) {
 		$result = $object->getLinesArray();
 
-		print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+		print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST" id="formtocreate" name="formtocreate">';
 		print '<input type="hidden" name="token" value="'.newToken().'">';
-		print '<input type="hidden" name="action" value="add">';
+		print '<input type="hidden" name="action" id="formtocreateaction" value="add">';
 		print '<input type="hidden" name="facid" value="'.$object->id.'">';
+		print '<input type="hidden" name="changepaymentmode" value="">';	// will be set to code by javascript so we know post is done after a payment change
+
 
 		print dol_get_fiche_head([], '', '', 0);
 
@@ -1082,6 +1091,25 @@ if ($action == 'create') {
 		print $form->select_types_paiements(GETPOSTISSET('mode_reglement_id') ? GETPOSTINT('mode_reglement_id') : $object->mode_reglement_id, 'mode_reglement_id', '', 0, 1, 0, 0, 1, '', 1);
 		//$form->form_modes_reglement($_SERVER['PHP_SELF'].'?id='.$object->id, $object->mode_reglement_id, 'mode_reglement_id', '', 1);
 		print "</td></tr>";
+
+		print '<script>
+				$(document).ready(function() {
+					$("#selectmode_reglement_id").change(function() {
+							// For payment mode change, we must submit page with action=create instead of action=add
+							console.log("We have changed the payment mode - Resubmit page");
+							jQuery("#formtocreateaction").val("create");
+                            jQuery("input[name=changepaymentmode]").val($("#selectmode_reglement_id option:selected").data("code"));
+							jQuery("#formtocreate").submit();
+					});
+				});
+				</script>';
+
+		// Customer Bank Account
+		if ($changepaymentmode == "PRE") {
+			print "<tr><td>".$langs->trans('BankAccountClient')."</td><td>";
+			$form->selectComptesCustomer($_SERVER['PHP_SELF'].'?id='.$object->id, 'fk_societe_rib');
+			print "</td></tr>";
+		}
 
 		// Bank account
 		if ($object->fk_account > 0) {
@@ -1427,6 +1455,25 @@ if ($action == 'create') {
 			$htmltext .= $key.' = '.$langs->trans($val).'<br>';
 		}
 		$htmltext .= '</i>';
+
+		// Bank Account Customer
+		print '<tr><td class="nowrap">';
+		print '<table width="100%" class="nobordernopadding"><tr><td class="nowrap">';
+		print $langs->trans('BankAccountCustomer');
+		print '<td>';
+
+		if (($action != 'editbankaccountcustomer') && $user->hasRight('facture', 'creer') && $object->statut == FactureRec::STATUS_DRAFT) {
+			print '<td class="right"><a class="editfielda" href="'.$_SERVER["PHP_SELF"].'?action=editbankaccountcustomer&token='.newToken().'&id='.$object->id.'">'.img_edit($langs->trans('SetBankAccountCustomer'), 1).'</a></td>';
+		}
+		print '</tr></table>';
+		print '</td><td>';
+		if ($action == 'editbankaccountcustomer') {
+			$form->formSelectAccountCustomer($_SERVER['PHP_SELF'].'?id='.$object->id, $object->fk_societe_rib, 'fk_societe_rib', 1);
+		} else {
+			$form->formSelectAccountCustomer($_SERVER['PHP_SELF'].'?id='.$object->id, $object->fk_societe_rib, 'none');
+		}
+		print "</td>";
+		print '</tr>';
 
 		// Bank Account
 		print '<tr><td class="nowrap">';
