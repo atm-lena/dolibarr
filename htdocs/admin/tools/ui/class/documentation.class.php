@@ -158,12 +158,21 @@ class Documentation
 				),
 				'Inputs' => array(
 					'url' => dol_buildpath($this->baseUrl.'/components/inputs.php', 1),
-					'icon' => 'fas fa-comments',
+					'icon' => 'fas fa-code',
 					'submenu' => array(),
 					'summary' => array(
 						'DocBasicUsage' => '#setinputssection-basicusage',
 						'DocHelperFunctionsInputUsage' => '#setinputssection-helperfunctions',
 						'DocHelperFunctionsGetSearchFilterToolInput' => '#setinputssection-getSearchFilterToolInput',
+					)
+				),
+				'Boxes' => array(
+					'url' => dol_buildpath($this->baseUrl.'/components/boxes.php', 1),
+					'icon' => 'fas fa-box',
+					'submenu' => array(),
+					'summary' => array(
+						'DocHTMLUsage' => '#boxesection-htmlusage',
+						'DocPHPUsage' => '#boxesection-phpusage',
 					)
 				),
 			),

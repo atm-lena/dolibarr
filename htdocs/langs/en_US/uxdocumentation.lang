@@ -51,14 +51,14 @@ DocTableMainDescription=Documentation and examples for tables.
 DocTableBasic=Basic usage
 DocTableBasicDescription=Here is a template for creating a basic data table.
 DocTableWithFilters=Filters row
-DocTableWithFiltersDescription=You can add a filters row using the following syntax. Your table must be into a form tag. <br>In order to show inputs, you can use the Form Class (see <a href="%s">#Inputs</a>) <br><span class="opacitylow"><i>Look at a list file to see how to use dynamic fields, not functionnal here.</i></span>
+DocTableWithFiltersDescription=You can add a filters row using the following syntax. Your table must be into a form tag. <br>In order to show inputs, you can use the Form Class (see <a href="%s">#Inputs</a>) <br><span class="opacitylow"><i>Look at a list file to see how to use dynamic fields, not functional here.</i></span>
 DocTableBeforeFilters=Use a custom line before cols filters
 DocTableBeforeFiltersDescription=You can add a line before filters with this syntax. <br>Don't forget to use listwithfilterbefore class in your data table.
 DocTableCSSClass=Using CSS Classes
 DocTableCSSClassDescription=There are many classes for tables in Dolibarr, below is a non-exhaustive list.
 DocTableTRCSSClassDescription=<b><u>Class for row element:</u></b>
 DocTableTABLECSSClassDescription=<b><u>Class for table element:</u></b>
-DocTableCSSClass_tagtable=<b>tagtable:</b> Use diplay table
+DocTableCSSClass_tagtable=<b>tagtable:</b> Use display table
 DocTableCSSClass_liste=<b>liste:</b> Prepare the table for a list
 DocTableCSSClass_listwithfilterbefore=<b>listwithfilterbefore:</b> Useful class to hide top border and border radius if elements are placed before filters
 DocTableCSSClass_liste_titre=<b>liste_titre:</b> Used for table headers
@@ -122,6 +122,15 @@ DocInputsTitle = Inputs
 DocSearchInputUsage = Helper functions for search input + dynamic js filter
 DocSearchInputUsageDescription = The attribute values `data-search-tool-target`, `data-counter-target`, and `data-no-item-target` are CSS selectors, allowing you to target multiple search areas. Example: `data-search-tool-target=".zone01, .zone02, .zone03"`
 
+#Boxes
+DocBoxeMainDescription = Documentation and examples for boxes
+DocHTMLUsage= HTML Boxes Usage
+DocPHPUsage= PHP Boxes Usage
+DocBoxeHtmlUsageDescription = Display boxes without or with notifications
+DocBoxePhpUsageDescription= Display boxes with dolibarr functions : load(), showBox()
+DocBoxeTitle=Boxes
+
+
 #Contributing
 DocContributeStep1=Create your documentation page
 DocContributeStep1Description=In order to create your page, you can copy the template/documentation_page.php file into the folder of your choice (Components, Content, ...) or you can copy/paste the code below into a new file.
@@ -158,7 +167,7 @@ ExperimentalUxContributionTxt02 = The different variants of this experiment will
 ExperimentalUxContributionTxt03 = In some cases, variants may be incompatible with each other. It is often challenging to make different behaviors coexist when they are based on the same interaction. For this reason, it may be necessary to separate the demos in such situations.
 ExperimentalUxContributionEnd = This structure ensures a clear and modular organization of UX experiments, making testing and future integration more efficient.
 
-# Start experiements menu title
+# Start experiments menu title
 ExperimentalUxFreezeTooltip = Tooltip freeze
 ExperimentalUxInputAjaxFeedback = Input feedback
-# End experiements manu tyile
+# End experiments manu tyile
